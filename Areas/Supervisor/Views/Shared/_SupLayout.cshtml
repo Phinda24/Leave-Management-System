@@ -1,0 +1,153 @@
+﻿@using Microsoft.AspNetCore.Http
+@using Leave_Management_system.viewModel
+@inject IHttpContextAccessor HttpContextAccessor
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Leavify</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    @RenderSection("Styles", required: false)
+</head>
+
+<body class="@($"{ViewContext.RouteData.Values["controller"]}-{ViewContext.RouteData.Values["action"]}".ToLower())">
+
+    <div id="wrapper" class="d-flex">
+        <!-- Sidebar (green panel) -->
+        <nav id="sidebar-wrapper" class="shadow-sm">
+            @* PROFILE BLOCK: prefer EmployeeHomeViewModel.Profile when present *@
+            <div class="profile">
+                @{
+                    var pageVm = ViewData.Model as Leave_Management_system.viewModel.EmployeeHomeViewModel;
+                }
+
+                @if (pageVm != null && pageVm.Profile != null)
+                {
+                    <div class="card profile-card mb-3 text-center p-3">
+                        <img src="@(pageVm.Profile.PhotoUrl ?? Url.Content("~/images/default-avatar.png"))"
+                             class="rounded-circle mb-2 profile-avatar"
+                             style="width:90px;height:90px;" alt="Profile Photo" />
+                        <h5 class="mb-0 profile-name">@pageVm.Profile.FullName</h5>
+                        <p class="small mb-0 profile-email">@pageVm.Profile.Email</p>
+                        <p class="small text-muted profile-phone">@pageVm.Profile.Phone</p>
+                        <p class="small text-muted profile-dept">@pageVm.Profile.Department</p>
+                    </div>
+                }
+                else
+                {
+                    @* Try to render a Profile view component, otherwise use a static fallback *@
+                    try
+                    {
+                        @await Component.InvokeAsync("Profile")
+                    }
+                    catch
+                    {
+                        <div class="card profile-card mb-3 text-center p-3">
+                            <img src="~/images/default-avatar.png" class="rounded-circle mb-2 profile-avatar" style="width:90px;height:90px;" alt="Profile Photo" />
+                            <h5 class="mb-0 profile-name">Guest User</h5>
+                            <p class="small mb-0 profile-email">guest@example.com</p>
+                            <p class="small text-muted profile-phone">000 000 0000</p>
+                            <p class="small text-muted profile-dept">—</p>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="list-group list-group-flush sidebar-nav">
+                <a class="list-group-item list-group-item-action d-flex align-items-center" asp-controller="SupHome" asp-action="SupDashboard">
+                    <i class="bi bi-grid-fill me-2"></i> Dashboard
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex align-items-center"
+                   asp-controller="LeaveRequest" asp-action="Pending">
+                    <i class="bi bi-plus-square me-2"></i> Leave Requests
+                </a>
+
+                <a class="list-group-item list-group-item-action d-flex align-items-center" asp-controller="LeaveRequest" asp-action="MyApplications" asp-route-employeeId="@HttpContextAccessor.HttpContext?.Session?.GetString("EmployeeId")">
+                    <i class="bi bi-journal-text me-2"></i> Reports
+                </a>
+
+                @*  <a class="list-group-item list-group-item-action d-flex align-items-center @( (ViewContext.RouteData.Values["action"]?.ToString() ?? "").Equals("LeaveBalances", System.StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                   asp-controller="LeaveRequest" asp-action="LeaveBalances" asp-route-employeeId="@HttpContextAccessor.HttpContext?.Session?.GetString("EmployeeId")">
+                    <i class="bi bi-list-check me-2"></i> Leave Balances
+                </a> *@
+
+                @* <a class="list-group-item list-group-item-action d-flex align-items-center @( (ViewContext.RouteData.Values["action"]?.ToString() ?? "").Equals("History", System.StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                   asp-controller="LeaveRequest"
+                   asp-action="History"
+                   asp-route-employeeId="@HttpContextAccessor.HttpContext?.Session?.GetString("EmployeeId")">
+                    <i class="bi bi-clock-history me-2"></i> Leave history
+                </a> *@
+
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="flex-grow-1">
+            <!-- Header -->
+            <header>
+                <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+                    <div class="container-fluid">
+                        <a style="font-weight:700; color:#0b6b47;">Leavify</a>
+
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+
+                        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                            @* <ul class="navbar-nav flex-grow-1">
+                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a></li>
+                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="LeaveRequest" asp-action="MyApplications">Leave Requests</a></li>
+                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="EmployeeHome" asp-action="Index">Dashboard</a></li>
+                            </ul> *@
+
+                            @* <div class="d-flex align-items-center user-area">
+                                <div class="user-name me-3">@HttpContextAccessor.HttpContext?.Session?.GetString("FullName") ?? "User"</div> *@
+                            <div class="position-absolute top-0 end-0 d-flex align-items-center user-area">
+                                <div class="user-name me-3">@HttpContextAccessor.HttpContext?.Session?.GetString("FullName") ?? "User"</div>
+
+                                @*  <div class="user-avatar-circle ms-2">
+                                    <img src="@(HttpContextAccessor.HttpContext?.Session?.GetString("ProfileImageUrl") ?? Url.Content("~/images/default-avatar.png"))" alt="user" style="width:36px;height:36px;border-radius:50%" />
+                                </div> *@
+                                @* <a class="ms-3 text-muted small" asp-controller="EmployeeAuth" asp-action="Logout">Logout</a> *@
+                                <form asp-controller="EmployeeAuth" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger ms-3 small">
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+
+
+
+            <!-- Body -->
+            <div class="app-container container-fluid px-4">
+                <main role="main" class="flex-grow-1">
+                    @RenderBody()
+                </main>
+            </div>
+
+            <!-- Footer -->
+            @* <footer class="border-top footer text-muted py-3">
+                <div class="container text-center">
+                    &copy; 2025 - Leavify | <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </div>
+            </footer> *@
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

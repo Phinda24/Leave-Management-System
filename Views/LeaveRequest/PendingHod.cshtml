@@ -1,0 +1,15 @@
+﻿@* @model List<Leave_Management_system.Models.LeaveRequest>
+@{
+    Layout = "~/Views/Shared/_HodLayout.cshtml";
+}
+<partial name="_PendingList" model="Model" />
+ *@
+@model List<Leave_Management_system.Models.LeaveRequest>
+
+@{
+    // Prefer reading layout from ViewData (set in controller) so controller centrally controls layout.
+    Layout = ViewData["Layout"] as string ?? "~/Views/Shared/_HodLayout.cshtml";
+}
+
+<partial name="_PendingList" model="Model" />
+

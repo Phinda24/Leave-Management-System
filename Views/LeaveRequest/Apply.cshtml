@@ -1,0 +1,76 @@
+﻿@model Leave_Management_system.Models.LeaveRequest
+@{
+    ViewData["Title"] = "Apply for Leave";
+}
+
+<link rel="stylesheet" href="~/css/apply-leave.css" />
+
+<div class="apply-container">
+    <div class="apply-card">
+        <h2 class="form-title">Apply for Leave</h2>
+
+        <form asp-action="Apply" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="LeaveType">Leave Type</label>
+                <select id="LeaveType" name="LeaveType" class="form-control" required>
+                    <option value="">-- Select Leave Type --</option>
+                    <option value="Annual">Annual</option>
+                    <option value="Sick">Sick</option>
+                    <option value="Family Responsibility">Family Responsibility</option>
+                    <option value="Study">Study</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="StartDate">Start Date</label>
+                    <input type="date" id="StartDate" name="StartDate" class="form-control" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="EndDate">End Date</label>
+                    <input type="date" id="EndDate" name="EndDate" class="form-control" required />
+                </div>
+            </div>
+
+            <div class="form-group halfday">
+                <label><input type="checkbox" name="HalfDay" value="true" /> ½ Day</label>
+            </div>
+
+            <div class="form-group">
+                <label for="Reason">Reason</label>
+                <select id="Reason" name="Reason" class="form-control" required>
+                    <option value="">-- Select Reason --</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Medical">Medical</option>
+                    <option value="Family Emergency">Family Emergency</option>
+                    <option value="Study Purposes">Study Purposes</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Comment">Comment</label>
+                <textarea id="Comment" name="Comment" class="form-control" rows="3" placeholder="Add any additional notes..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="SupportingDocument">Upload Supporting Documents</label>
+                <input type="file" id="SupportingDocument" name="SupportingDocument" class="form-control-file" />
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <p class="success-msg">@TempData["SuccessMessage"]</p>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <p class="error-msg">@TempData["ErrorMessage"]</p>
+            }
+        </form>
+    </div>
+</div>
+

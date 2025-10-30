@@ -1,0 +1,9 @@
+﻿# ignore local secrets
+serviceAccountKey.json
+secrets/
+# also ignore node_modules, build outputs, git metadata etc.
+node_modules
+bin/
+obj/
+.git
+.gitignore

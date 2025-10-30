@@ -1,0 +1,9 @@
+﻿@{
+    Layout = "_LayoutPlain";
+   
+}
+@{
+    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
+    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
+    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
+}

@@ -1,0 +1,38 @@
+﻿
+@{
+    Layout = null; // explicit: this is the root layout
+}
+@{
+    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
+    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
+    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Leavify</title>
+
+    <!-- Optional: keep Bootstrap and your site CSS for quick styling; remove if you want completely blank -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
+</head>
+
+<body>
+    <!-- Plain container where pages will render their content -->
+    <div class="container py-4">
+        @RenderBody()
+    </div>
+
+    <!-- Minimal scripts (remove if you want no JS) -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

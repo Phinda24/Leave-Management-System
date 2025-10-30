@@ -1,0 +1,208 @@
+﻿@using Leave_Management_system.Models
+@model Leave_Management_system.viewModel.EmployeeHomeViewModel
+@{
+    ViewData["Title"] = "Home";
+    Layout = "_EmployeeLayout";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Leavify</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+   
+</head>
+
+    <body>
+    
+   
+
+        <div class="row">
+
+       @*  <!-- Right main content -->
+        <div class="col-12 col-md-9">
+            <div class="row mb-3 gx-3">
+                <div class="col">
+                    <div class="card p-3">
+                        <small>Annual</small>
+                        <h4>@Model.AnnualCount</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card p-3">
+                        <small>Sick</small>
+                        <h4>@Model.SickCount</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card p-3">
+                        <small>Study</small>
+                        <h4>@Model.StudyCount</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card p-3">
+                        <small>Family Responsibility</small>
+                        <h4>@Model.FamilyCount</h4>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card p-3">
+                        <small>Pending</small>
+                        <h4>@Model.PendingCount</h4>
+                    </div>
+                </div>
+            </div> *@
+        <div class="employee-cards">
+            <div class="row mb-3 gx-3">
+                <!-- your card columns here -->
+                <div class="row mb-3 gx-3">
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
+                            <small class="text-muted">Annual</small>
+                            <h4 class="mb-0">@Model.AnnualCount</h4>
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
+                            <small class="text-muted">Sick</small>
+                            <h4 class="mb-0">@Model.SickCount</h4>
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
+                            <small class="text-muted">Study</small>
+                            <h4 class="mb-0">@Model.StudyCount</h4>
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
+                            <small class="text-muted">Family</small>
+                            <h4 class="mb-0">@Model.FamilyCount</h4>
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
+                            <small class="text-muted">Pending</small>
+                            <h4 class="mb-0">@Model.PendingCount</h4>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Leave History</span>
+                    <a class="btn btn-sm btn-success" asp-controller="LeaveRequest" asp-action="Apply">Apply for leave</a>
+
+                </div>
+
+                <div class="card-body p-0">
+                    <table class="table mb-0 table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Date Range</th>
+                                <th>Status</th>
+                                @*  <th>Reason</th>
+                            <th>Documents</th> *@
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.MyLeaves != null && Model.MyLeaves.Count > 0)
+                            {
+                                foreach (var r in Model.MyLeaves)
+                                {
+
+                                    <tr>
+                                        @*  <td>@r.LeaveType</td>
+                                    <td>@r.StartDate.ToString("yyyy-MM-dd") - @r.EndDate.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        @if (r.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        }
+                                        else if (r.Status == "Approved")
+                                        {
+                                            <span class="badge bg-success">Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Rejected</span>
+                                        }
+                                    </td>
+                                    <td>@r.Reason</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(r.DocumentUrl))
+                                        {
+                                            <a target="_blank" title="Download" href="@r.DocumentUrl"><i class="fa fa-download"></i></a>
+                                        }
+                                    </td> *@ 
+                                       
+                                            <td>@r.LeaveType</td>
+                                        <td>@r.StartDate.ToString("yyyy-MM-dd") - @r.EndDate.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                       
+                                        @{
+                                            var status = r.Status ?? StatusValues.Pending;
+                                            var isPending = string.Equals(status, StatusValues.Pending, StringComparison.OrdinalIgnoreCase)
+                                            || string.Equals(status, StatusValues.PendingHod, StringComparison.OrdinalIgnoreCase);
+                                        }
+
+                                        @if (isPending)
+                                        {
+                                            var displayText = string.Equals(status, StatusValues.PendingHod, StringComparison.OrdinalIgnoreCase)
+                                            ? "Pending (approved by Supervisor)"
+                                            : "Pending";
+
+                                            <span class="badge bg-warning text-dark">@displayText</span>
+
+                                            @* optional small line below if you prefer a separate line *@
+                                            @* if (r.SupervisorApproved && string.Equals(status, StatusValues.PendingHod, StringComparison.OrdinalIgnoreCase)) {
+                                               <div style="font-size:11px;color:#6b7a70;margin-top:4px;">Approved by Supervisor — waiting for HOD</div>
+                                                 } *@
+                                        }
+                                        else if (string.Equals(status, StatusValues.Approved, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <span class="badge bg-success">Approved</span>
+                                        }
+                                        else if (string.Equals(status, StatusValues.Rejected, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <span class="badge bg-danger">Rejected</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@status</span>
+                                        }
+                                    </td>
+
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center">No leave history found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    
+
+    </body>
+
+
+</html>

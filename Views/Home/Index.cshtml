@@ -1,0 +1,30 @@
+﻿@* @{
+    ViewData["Title"] = "Welcome";
+} *@
+<link rel="stylesheet" href="~/css/welcome.css" />
+
+<div class="welcome-wrap">
+    <div class="welcome-card">
+        <!-- left decorative SVG -->
+        <svg class="decor-left" viewBox="0 0 800 600" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 400 C120 220 320 150 520 60 C700 -12 900 70 900 70 L900 600 L0 600 Z" fill="#dbf6e6" />
+        </svg>
+
+        <!-- right decorative SVG -->
+        <svg class="decor-right" viewBox="0 0 800 600" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 120 C140 20 340 -20 540 40 C720 90 900 160 900 160 L900 0 L0 0 Z" fill="#e6f8e9" />
+        </svg>
+
+        <!-- foreground content -->
+        <img class="logo" src="~/images/leaveify-logo.svg" alt="Leaveify logo" />
+
+        <h3 class="app-name">Leaveify</h3>
+
+        <h2 class="headline">Welcome to Leavify</h2>
+        <p class="sub">Easily request, track, and manage your leave all in one place</p>
+
+        <!-- ✅ fixed Sign in button -->
+        <a class="sign-btn" asp-controller="EmployeeAuth" asp-action="Login">Sign in</a>
+    </div>
+</div>
+

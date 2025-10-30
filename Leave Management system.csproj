@@ -1,0 +1,79 @@
+﻿<!--<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Leave_Management_system</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.13.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="FirebaseAdmin" Version="3.4.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.71.0" />
+    <PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\secrets2\" />
+  </ItemGroup>
+
+	<ItemGroup>
+  <None Update="serviceAccountKey.json">
+    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+  </None>
+</ItemGroup>
+		<None Update="serviceAccountKey.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</None>
+	
+</Project>-->
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>Leave_Management_system</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.13.0" />
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="FirebaseAdmin" Version="3.4.0" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.71.0" />
+		<PackageReference Include="Google.Cloud.Firestore" Version="3.10.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+	</ItemGroup>
+
+	<!-- Keep public static content folders -->
+	<ItemGroup>
+		<Folder Include="wwwroot\images\" />
+	</ItemGroup>
+
+	<!-- Add a secrets folder (NOT under wwwroot) so it appears in Solution Explorer -->
+	<ItemGroup>
+		<Folder Include="secrets\" />
+	</ItemGroup>
+
+	<!-- Treat the service account JSON as a non-build, non-published secret (do NOT copy to output) -->
+	<ItemGroup>
+		<!-- If you put the file at <project-root>/secrets/serviceAccountKey.json use the Include below -->
+		<None Include="secrets\serviceAccountKey.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</None>
+	</ItemGroup>
+
+	<!-- Ensure the service worker is published to the site root so browser can load /firebase-messaging-sw.js -->
+	<ItemGroup>
+		<Content Include="wwwroot\firebase-messaging-sw.js">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+</Project>

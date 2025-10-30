@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "HOD Login";
+}
+<link rel="stylesheet" href="~/css/employee-login.css" />
+
+<div class="login-wrapper">
+    <main class="login-card" role="main" aria-labelledby="loginHeading">
+        <header class="card-head">
+            <div class="brand">
+                <div class="brand-circle" aria-hidden="true">H</div>
+                <div class="brand-text">
+                    <h1 id="loginHeading">HOD Sign in</h1>
+                    <p class="muted">HOD portal — manage leave requests & approvals</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="card-body">
+            <form asp-controller="HodAuth" asp-action="Login" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" required autofocus autocomplete="email" />
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="password-row">
+                        <input id="password" name="password" type="password" required autocomplete="current-password" />
+                        <button type="button" class="toggle-password" aria-label="Show password" title="Show/Hide password">Show</button>
+                    </div>
+                </div>
+
+                <div class="field horizontal">
+                    <label class="checkbox">
+                        <input id="rememberMe" name="rememberMe" type="checkbox" />
+                        <span>Remember me</span>
+                    </label>
+                    <a class="forgot" asp-controller="Auth" asp-action="ForgotPassword">Forgot?</a>
+                </div>
+
+                <div class="field">
+                    <button type="submit" class="btn-submit">Sign In</button>
+                </div>
+
+                @* Server validation errors *@
+                <div class="errors-area" aria-live="polite">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="errors">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div class="error-item">@error.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="errors">
+                            <div class="error-item">@TempData["ErrorMessage"]</div>
+                        </div>
+                    }
+                </div>
+            </form>
+        </section>
+
+        <footer class="card-foot">
+            <small>Not an HOD? <a asp-controller="EmployeeAuth" asp-action="Login">Sign in as Employee</a></small>
+        </footer>
+    </main>
+</div>
+
+<script>
+    // small client script to toggle password visibility
+    (function () {
+        const toggle = document.querySelector('.toggle-password');
+        const pwd = document.getElementById('password');
+        if (!toggle || !pwd) return;
+        toggle.addEventListener('click', function () {
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                toggle.textContent = 'Hide';
+                toggle.setAttribute('aria-label', 'Hide password');
+            } else {
+                pwd.type = 'password';
+                toggle.textContent = 'Show';
+                toggle.setAttribute('aria-label', 'Show password');
+            }
+        });
+    })();
+</script>
+

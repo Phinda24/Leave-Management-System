@@ -1,0 +1,168 @@
+﻿@model Leave_Management_system.Models.LeaveBalanceViewModel
+@{
+    ViewData["Title"] = "My Leave Balances";
+
+    // safe date formatter that accepts either DateTime or nullable DateTime
+    string FormatDate(object dtObj)
+    {
+        if (dtObj == null) return "—";
+        if (dtObj is DateTime dt) return dt.ToString("dd MMM yyyy");
+        if (dtObj is DateTime ndt && dtObj.GetType() == typeof(DateTime?)) return ndt.ToString("dd MMM yyyy");
+        DateTime parsed;
+        return DateTime.TryParse(dtObj.ToString(), out parsed) ? parsed.ToString("dd MMM yyyy") : "—";
+    }
+
+    var startDateStr = FormatDate(Model.StartDate);
+    var endDateStr = FormatDate(Model.EndDate);
+}
+
+<link rel="stylesheet" href="~/css/leavebalances.css" />
+
+<div class="leave-page">
+    <main class="content">
+        <div class="header">
+            <h2>My Leave Balances</h2>
+            <div class="user-menu">
+                <span>@Model.FullName</span>
+                <a asp-controller="Auth" asp-action="Logout">Logout</a>
+            </div>
+        </div>
+
+        <div class="leave-grid">
+
+            @* Annual Leave *@
+            <div class="card">
+                <h3>Annual Leave</h3>
+                <p class="date-range">@startDateStr – @endDateStr</p>
+                <div class="details">
+                    <p>Current Balance: <strong>@Model.AnnualLeaveBalance</strong> days</p>
+
+                    <div class="progress-bar" role="progressbar" aria-valuenow="@Model.AnnualUsedPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-used" style="width:@Model.AnnualUsedPercent.ToString("0.##")%" data-tooltip="@Model.AnnualLeaveTaken days taken"></div>
+                        <div class="progress-available" style="width:@Model.AnnualAvailablePercent.ToString("0.##")%" data-tooltip="@Model.AnnualLeaveBalance days available"></div>
+                    </div>
+
+                    <p>Taken: <strong>@Model.AnnualLeaveTaken</strong> / @Model.AnnualLeaveEntitlement</p>
+                </div>
+            </div>
+
+            @* Sick Leave *@
+            <div class="card">
+                <h3>Sick Leave</h3>
+                <p class="date-range">@startDateStr – @endDateStr</p>
+                <div class="details">
+                    <p>Current Balance: <strong>@Model.SickLeaveBalance</strong> days</p>
+
+                    <div class="progress-bar" role="progressbar" aria-valuenow="@Model.SickUsedPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-used" style="width:@Model.SickUsedPercent.ToString("0.##")%" data-tooltip="@Model.SickLeaveTaken days taken"></div>
+                        <div class="progress-available" style="width:@Model.SickAvailablePercent.ToString("0.##")%" data-tooltip="@Model.SickLeaveBalance days available"></div>
+                    </div>
+
+                    <p>Taken: <strong>@Model.SickLeaveTaken</strong> / @Model.SickLeaveEntitlement</p>
+                </div>
+            </div>
+
+            @* Family Responsibility Leave *@
+            <div class="card">
+                <h3>Family Responsibility Leave</h3>
+                <p class="date-range">@startDateStr – @endDateStr</p>
+                <div class="details">
+                    <p>Current Balance: <strong>@Model.FamilyLeaveBalance</strong> days</p>
+
+                    <div class="progress-bar" role="progressbar" aria-valuenow="@Model.FamilyUsedPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-used" style="width:@Model.FamilyUsedPercent.ToString("0.##")%" data-tooltip="@Model.FamilyLeaveTaken days taken"></div>
+                        <div class="progress-available" style="width:@Model.FamilyAvailablePercent.ToString("0.##")%" data-tooltip="@Model.FamilyLeaveBalance days available"></div>
+                    </div>
+
+                    <p>Taken: <strong>@Model.FamilyLeaveTaken</strong> / @Model.FamilyLeaveEntitlement</p>
+                </div>
+            </div>
+
+            @* Study Leave *@
+            <div class="card">
+                <h3>Study Leave</h3>
+                <p class="date-range">@startDateStr – @endDateStr</p>
+                <div class="details">
+                    <p>Current Balance: <strong>@Model.StudyLeaveBalance</strong> days</p>
+
+                    <div class="progress-bar" role="progressbar" aria-valuenow="@Model.StudyUsedPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-used" style="width:@Model.StudyUsedPercent.ToString("0.##")%" data-tooltip="@Model.StudyLeaveTaken days taken"></div>
+                        <div class="progress-available" style="width:@Model.StudyAvailablePercent.ToString("0.##")%" data-tooltip="@Model.StudyLeaveBalance days available"></div>
+                    </div>
+
+                    <p>Taken: <strong>@Model.StudyLeaveTaken</strong> / @Model.StudyLeaveEntitlement</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<style>
+    .card {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        margin-bottom: 16px;
+    }
+
+    /* Flex-based progress bar so percentages add up and can't overlap */
+    .progress-bar {
+        display: flex;
+        width: 100%;
+        height: 18px;
+        background-color: #e0e0e0;
+        border-radius: 9px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .progress-used,
+    .progress-available {
+        height: 100%;
+        transition: width 1.0s ease-in-out;
+    }
+
+    .progress-used {
+        background-color: #f44336; /* red = used */
+    }
+
+    .progress-available {
+        background-color: #4caf50; /* green = available */
+    }
+
+        /* Tooltip */
+        .progress-used::after,
+        .progress-available::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -34px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .progress-used:hover::after,
+        .progress-available:hover::after {
+            opacity: 1;
+        }
+
+    .date-range {
+        color: #777;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+
+    .details p {
+        margin: 6px 0;
+    }
+</style>

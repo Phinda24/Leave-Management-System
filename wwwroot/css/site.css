@@ -1,0 +1,100 @@
+/ /* ---- Sidebar (prototype green panel) ---- */
+#wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* panel */
+#sidebar-wrapper {
+    width: 260px;
+    background: linear-gradient(180deg,#dbf6db,#d9f3db);
+    padding: 18px;
+    border-right: 1px solid #e6efe6;
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+
+/* profile card (matches your snippet) */
+.profile-card {
+    background: linear-gradient(180deg,#9ed7a4,#8fd09b);
+    border-radius: 12px;
+    padding: 18px;
+    color: #062f16;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+    .profile-card .profile-avatar {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid rgba(255,255,255,0.55);
+        margin-bottom: 8px;
+    }
+
+    .profile-card h5 {
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .profile-card p.small {
+        margin: 0;
+        color: rgba(0,0,0,0.6);
+    }
+
+/* nav links */
+.sidebar-nav .list-group-item {
+    border: 0;
+    background: transparent;
+    color: #0b6b3a;
+    font-weight: 600;
+    padding: 10px 8px;
+    border-radius: 10px;
+    transition: all .12s ease;
+}
+
+    .sidebar-nav .list-group-item i {
+        font-size: 1.05rem;
+        margin-right: 8px;
+    }
+
+    .sidebar-nav .list-group-item:hover,
+    .sidebar-nav .list-group-item.active {
+        background: #2f8a49;
+        color: #fff !important;
+        box-shadow: 0 6px 22px rgba(47,138,73,0.12);
+        transform: translateX(2px);
+    }
+
+/* keep header compact */
+.navbar {
+    padding: .5rem 1rem;
+}
+
+/* responsive */
+@media (max-width:991px) {
+    #sidebar-wrapper {
+        display: none;
+    }
+
+    #page-content-wrapper {
+        padding: 0;
+    }
+}
+
+/* Employee dashboard card tweaks (scoped) */
+.employee-cards .card.h-100 {
+    min-height: 96px;
+}
+
+.employee-cards .card small {
+    display: block;
+    margin-bottom: 6px;
+}
+
+@media (max-width: 575.98px) {
+    .employee-cards .card h4 {
+        font-size: 1.25rem;
+    }
+}

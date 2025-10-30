@@ -1,0 +1,100 @@
+﻿@model List<Leave_Management_system.Models.LeaveRequest>
+
+@{
+    ViewData["Title"] = "My Leave History";
+
+}
+
+
+<h2>My Leave History</h2>
+
+<a asp-controller="EmployeeHome"
+   asp-action="Index"
+   asp-route-employeeId="@Context.Request.Query["EmployeeId"]"
+   class="btn btn-sm btn-success">
+
+    Back to Dashboard
+</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+<tbody>
+    @foreach (var leave in Model)
+    {
+        <tr>
+            <td>@leave.LeaveType</td>
+            <td>@(leave.StartDate != null ? leave.StartDate.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
+            <td>@(leave.EndDate != null ? leave.EndDate.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
+            <td>@(string.IsNullOrWhiteSpace(leave.Reason) ? "-" : leave.Reason)</td>
+            <td>
+                @if (leave.Status == "Approved")
+                {
+                    <span class="badge bg-success">Approved</span>
+                }
+                else if (leave.Status == "Rejected")
+                {
+                    <span class="badge bg-danger">Rejected</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark">Pending</span>
+
+                    @if (User.IsInRole("HOD") || User.IsInRole("Supervisor"))
+                    {
+                        <div class="mt-2 d-flex gap-2">
+                            <form asp-action="Approve" asp-controller="LeaveRequest" method="post">
+                                <input type="hidden" name="id" value="@leave.Id" />
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </button>
+                            </form>
+                            <form asp-action="Reject" asp-controller="LeaveRequest" method="post">
+                                <input type="hidden" name="id" value="@leave.Id" />
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </form>
+                        </div>
+                    }
+                }
+            
+    @(leave.DateApplied is DateTime dateApplied && dateApplied != DateTime.MinValue
+        ? dateApplied.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)
+        : "")
+</td>
+        </tr>
+    }
+</tbody>
+</table>
+
+@section Styles {
+    <style>
+        body {
+            background-color: #f8f9fa !important;
+        }
+
+        .card {
+            border-radius: 10px;
+        }
+
+        .table thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.03rem;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f3f5;
+            transition: 0.2s ease;
+        }
+    </style>
+}

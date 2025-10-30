@@ -1,0 +1,479 @@
+﻿
+@model List<Leave_Management_system.Models.LeaveRequest>
+@using Leave_Management_system.Models
+@{
+    ViewData["Title"] = "Pending Requests";
+
+}
+@{
+    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
+    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
+    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
+}
+@* @{
+    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
+    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
+    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "YOUR_VAPID_KEY";
+} *@
+
+<div class="hod-dashboard">
+    @* ----------------- PAGE ALERT (TempData) -----------------
+       Inserted here so it shows above the header every time the
+       _PendingList partial is rendered. Keep it here (not in the layout)
+       if you only want these alerts on the Pending page(s). *@
+
+    @{
+        var successMsg = TempData["Success"] as string;
+        var errorMsg = TempData["Error"] as string;
+    }
+
+    @if (!string.IsNullOrEmpty(successMsg) || !string.IsNullOrEmpty(errorMsg))
+    {
+        <div id="pageAlert" class="page-alert" role="status" aria-live="polite" aria-atomic="true">
+            @if (!string.IsNullOrEmpty(successMsg))
+            {
+                <div class="alert alert-success" data-type="success">
+                    <span class="alert-text">@successMsg</span>
+                    <button type="button" class="alert-close" aria-label="Dismiss">&times;</button>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <div class="alert alert-error" data-type="error">
+                    <span class="alert-text">@errorMsg</span>
+                    <button type="button" class="alert-close" aria-label="Dismiss">&times;</button>
+                </div>
+            }
+        </div>
+    }
+
+    @* ----------------- existing header follows ----------------- *@
+    <header class="dashboard-header">
+        <h2>Pending Leave Requests</h2>
+        <p class="muted">Approve or reject requests from your team</p>
+    </header>
+
+    <section class="table-wrap">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty">No leave requests found.</div>
+        }
+        else
+        {
+            <table class="requests-table" aria-describedby="requestsTableDesc">
+                <caption id="requestsTableDesc" class="visually-hidden">List of pending leave requests</caption>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Type</th>
+                        <th>Period</th>
+                        <th>Days</th>
+                        <th>Submitted</th>
+                        <th>Document</th>
+                        <th>Status</th>
+                        <th class="actions-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        // Get the UTC time from Firestore
+                        var submittedUtc = r.SubmittedAt.ToDateTime();
+                        // Ensure the DateTime is treated as UTC
+                        submittedUtc = DateTime.SpecifyKind(submittedUtc, DateTimeKind.Utc);
+
+                        DateTime submittedLocal;
+                        var start = r.StartDate.ToDateTime().Date;
+                        var end = r.EndDate.ToDateTime().Date;
+                        var days = (int)(end - start).TotalDays + 1;
+                        <tr>
+                            <td class="employee-name">@r.EmployeeName<br /><small class="muted">@r.EmployeeEmail</small></td>
+                            <td>@r.LeaveType</td>
+                            <td>@start.ToString("dd MMM yyyy") – @end.ToString("dd MMM yyyy")</td>
+                            <td>@days</td>
+                            @* <td>@r.SubmittedAt.ToDateTime().ToString("dd MMM yyyy HH:mm")</td> *@
+                            @{
+                                try
+                                {
+                                    // Use IANA on Linux or Windows id - Try Africa/Johannesburg first (common on Linux),
+                                    // fallback to Windows id "South Africa Standard Time" if that fails.
+                                    TimeZoneInfo tz;
+                                    try
+                                    {
+                                        tz = TimeZoneInfo.FindSystemTimeZoneById("Africa/Johannesburg");
+                                    }
+                                    catch
+                                    {
+                                        tz = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
+                                    }
+
+                                    submittedLocal = TimeZoneInfo.ConvertTimeFromUtc(submittedUtc, tz);
+                                }
+                                catch
+                                {
+                                    // As a last fallback convert to server local time
+                                    submittedLocal = submittedUtc.ToLocalTime();
+                                }
+                            }
+                            <td>@submittedLocal.ToString("dd MMM yyyy HH:mm")</td>
+
+                            <td>
+                                @if (!string.IsNullOrEmpty(r.DocumentUrl))
+                                {
+                                    <a target="_blank" rel="noopener" href="@r.DocumentUrl">View</a>
+                                }
+                                else
+                                {
+                                    <span class="muted">—</span>
+                                }
+                            </td>
+
+                            @* Friendly status display (uses GetDisplayStatus() if present on model) *@
+                            <td>
+                                <span class="status">
+                                    @{
+                                        // If you added GetDisplayStatus() to your model (as suggested), use it.
+                                        // Otherwise this will fall back to the raw Status string.
+                                        string display = null;
+                                        try { display = r.GetDisplayStatus(); } catch { display = r.Status ?? "Pending"; }
+                                    }
+                                    @display
+                                </span>
+
+                                @* small badge when supervisor already approved but waiting for HOD *@
+                                @if (r.SupervisorApproved && string.Equals(r.Status, "PendingHod", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <div style="margin-top:6px;font-size:12px;color:#0b3a2a;font-weight:600;">
+                                        <small>✔ Approved by Supervisor</small>
+                                    </div>
+                                }
+                            </td>
+
+                            <td class="actions-col">
+                                @* Approve form: send neutral operation (server decides final Status based on role) *@
+                                <form asp-controller="LeaveRequest" asp-action="UpdateStatus" method="post" class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <input type="hidden" name="operation" value="approve" />
+                                    <input type="hidden" name="reason" value="" />
+                                    <button type="submit" class="btn btn-approve" title="Approve request">Approve</button>
+                                </form>
+
+                                <button type="button" class="btn btn-reject" data-id="@r.Id" data-employee="@r.EmployeeName">Reject</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+</div>
+
+<style>
+    /* (styles unchanged from your original file) */
+    .hod-dashboard {
+        padding: 12px 6px;
+    }
+
+    .dashboard-header {
+        margin-bottom: 12px;
+    }
+
+        .dashboard-header h2 {
+            margin: 0 0 6px 0;
+            color: #0b3a2a;
+        }
+
+        .dashboard-header .muted {
+            color: #6b7a70;
+            font-size: 13px;
+            margin: 0;
+        }
+
+    .table-wrap {
+        overflow-x: auto;
+        background: #fff;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .requests-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .requests-table th, .requests-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f2;
+            vertical-align: middle;
+        }
+
+        .requests-table thead th {
+            background: #f7fbf7;
+            color: #06452a;
+            font-weight: 600;
+        }
+
+    .employee-name {
+        min-width: 180px;
+    }
+
+    .actions-col {
+        width: 220px;
+        text-align: right;
+    }
+
+    .inline-form {
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-approve {
+        background: linear-gradient(90deg, #3db66a 0%, #0b3a2a 100%);
+        color: #fff;
+    }
+
+    .btn-reject {
+        background: #fff;
+        color: #b42d2d;
+        border: 1px solid rgba(180,45,45,0.12);
+        padding: 7px 12px;
+        border-radius: 8px;
+    }
+
+    .status {
+        padding: 6px 8px;
+        border-radius: 6px;
+        background: #fff;
+        font-weight: 600;
+        color: #06452a;
+        border: 1px solid rgba(6,69,42,0.06);
+    }
+
+    .empty {
+        padding: 24px;
+        text-align: center;
+        color: #6b7a70;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .modal[aria-hidden="false"] {
+            display: flex;
+        }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(6,69,42,0.35);
+        z-index: 2000;
+        pointer-events: auto;
+    }
+
+    .modal-panel {
+        position: relative;
+        background: #fff;
+        border-radius: 10px;
+        max-width: 640px;
+        width: 96%;
+        z-index: 2001;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+
+        .modal-panel, .modal-panel * {
+            pointer-events: auto;
+        }
+
+    .modal-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f3f2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        padding: 16px 18px;
+        display: block;
+    }
+
+    .field label {
+        font-size: 13px;
+        color: #6b7a70;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .field textarea {
+        width: 100%;
+        min-height: 110px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #e8ece8;
+        resize: vertical;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 12px 18px;
+        border-top: 1px solid #f1f3f2;
+    }
+
+    .btn-cancel {
+        background: #fff;
+        border: 1px solid #d8ded8;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .btn-danger {
+        background: #d9534f;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .modal-close {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .visually-hidden {
+        position: absolute;
+        left: -9999px;
+        top: auto;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+    }
+</style>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="rejectTitle">
+    <div class="modal-backdrop" tabindex="-1"></div>
+    <div class="modal-panel" role="document">
+        <header class="modal-header">
+            <h3 id="rejectTitle">Reject Leave Request</h3>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </header>
+
+        <form id="rejectForm" asp-controller="LeaveRequest" asp-action="UpdateStatus" method="post" class="modal-body">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="modalRequestId" value="" />
+            <input type="hidden" name="operation" value="reject" />
+            <div class="field">
+                <label for="rejectReason">Reason for rejection (shown to employee)</label>
+                <textarea id="rejectReason" name="reason" rows="4" required></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel">Cancel</button>
+                <button type="submit" class="btn btn-danger">Reject Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+      const modal = document.getElementById('rejectModal');
+      const modalBackdrop = modal.querySelector('.modal-backdrop');
+      const modalClose = modal.querySelector('.modal-close');
+      const cancelBtn = modal.querySelector('.btn-cancel');
+      const modalRequestId = document.getElementById('modalRequestId');
+      const rejectButtons = document.querySelectorAll('.btn-reject');
+      const rejectForm = document.getElementById('rejectForm');
+
+      function openModal(requestId) {
+        modalRequestId.value = requestId || '';
+        modal.setAttribute('aria-hidden', 'false');
+        // focus on the textarea when opened
+        setTimeout(() => {
+          const ta = document.getElementById('rejectReason');
+          if (ta) ta.focus();
+        }, 80);
+      }
+
+      function closeModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        modalRequestId.value = '';
+        const ta = document.getElementById('rejectReason');
+        if (ta) ta.value = '';
+      }
+
+      rejectButtons.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const id = this.getAttribute('data-id');
+          openModal(id);
+        });
+      });
+
+      [modalBackdrop, modalClose, cancelBtn].forEach(n => {
+        if (n) n.addEventListener('click', closeModal);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeModal();
+      });
+
+      if (rejectForm) {
+        rejectForm.addEventListener('submit', function (ev) {
+          // simple client-side guard: require reason
+          const reason = (document.getElementById('rejectReason') || {}).value || '';
+          if (!reason.trim()) {
+            ev.preventDefault();
+            alert('Please add a reason for rejection.');
+            return;
+          }
+
+          // Visual feedback and disable submit to prevent double-click
+          const btn = rejectForm.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Rejecting...';
+          }
+
+          // optional: log to console for quick debug (open DevTools -> Network)
+          console.log('Submitting rejection:', {
+            id: modalRequestId.value,
+            operation: 'reject',
+            reason: reason
+          });
+
+          // allow the form to submit normally
+        });
+      }
+
+      // disable approve button on submit too
+      document.querySelectorAll('form.inline-form').forEach(f => {
+        f.addEventListener('submit', function () {
+          const b = f.querySelector('button[type="submit"]');
+          if (b) { b.disabled = true; b.textContent = 'Approving...'; }
+        });
+      });
+    })();
+</script>

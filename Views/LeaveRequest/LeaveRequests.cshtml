@@ -1,0 +1,44 @@
+﻿@model Leave_Management_system.Models.Employee
+
+@{
+    ViewData["Title"] = "Employee Dashboard";
+}
+
+<h2>Welcome, @Model.FullName!</h2>
+
+<div>
+    <p><strong>Employee ID:</strong> @Model.EmployeeId</p>
+    <p><strong>Email:</strong> @Model.Email</p>
+</div>
+
+<hr />
+
+<div class="mb-3">
+    <a asp-action="Apply" asp-route-employeeId="@Model.EmployeeId" class="btn btn-success">Apply for Leave</a>
+    <a asp-action="MyApplications" asp-route-employeeId="@Model.EmployeeId" class="btn btn-primary">My Applications</a>
+</div>
+
+<h3>Recent Leave Requests</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var leave in ViewBag.RecentLeaves)
+        {
+            <tr>
+                <td>@leave.LeaveType</td>
+                <td>@leave.StartDate.ToShortDateString()</td>
+                <td>@leave.EndDate.ToShortDateString()</td>
+                <td>@leave.Reason</td>
+                <td>@leave.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>

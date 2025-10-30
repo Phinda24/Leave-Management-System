@@ -1,0 +1,173 @@
+﻿@{
+    Layout = "~/Views/Shared/_SupLayout.cshtml";
+}
+@model List<Leave_Management_system.Models.LeaveRequest>
+
+<div class="hod-content-card">
+    <div class="card header-card">
+        <h2>Reports</h2>
+        <div class="muted small">Export or print leave reports</div>
+    </div>
+
+    <div class="card reports-card">
+        <div class="toolbar">
+            <button id="exportExcel" class="btn small">Excel</button>
+            <button id="exportCsv" class="btn small">CSV</button>
+            <button id="exportPdf" class="btn small">PDF</button>
+            <button id="btnPrint" class="btn small">Print</button>
+            <div class="spacer"></div>
+            <button id="refreshList" class="btn small">Refresh</button>
+        </div>
+
+        <div class="table-wrap">
+            <table id="reportsTable" class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        var start = r.StartDate.ToDateTime().Date;
+                        var end = r.EndDate.ToDateTime().Date;
+                        var days = (int)(end - start).TotalDays + 1;
+                        <tr>
+                            <td>@r.EmployeeId</td>
+                            <td>@r.EmployeeName</td>
+                            <td>@r.LeaveType</td>
+                            <td>@start.ToString("yyyy-MM-dd")</td>
+                            <td>@end.ToString("yyyy-MM-dd")</td>
+                            <td>@r.SubmittedAt.ToDateTime().ToString("yyyy-MM-dd")</td>
+                            <td>@r.Status</td>
+                            <td>@days</td>
+                            <td>@(string.IsNullOrEmpty(r.ReasonForStatus) ? "-" : r.ReasonForStatus)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hod-content-card {
+        padding: 20px;
+    }
+
+    .header-card {
+        margin-bottom: 10px;
+    }
+
+    .reports-card {
+        padding: 12px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .btn.small {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid #e6ece6;
+        background: #fff;
+        cursor: pointer;
+    }
+
+        .btn.small:hover {
+            transform: translateY(-2px);
+        }
+
+    .spacer {
+        flex: 1;
+    }
+
+    .table-wrap {
+        overflow: auto;
+        max-height: 60vh;
+        border-radius: 8px;
+    }
+
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .reports-table th, .reports-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f3f2;
+            text-align: left;
+        }
+
+        .reports-table thead th {
+            background: #f7fbf7;
+            color: #06452a;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+</style>
+
+<script>
+    /* CSV export and print */
+    (function(){
+        function tableToCSV(table) {
+            const rows = Array.from(table.querySelectorAll('tr'));
+            return rows.map(r => {
+                const cells = Array.from(r.querySelectorAll('th,td'));
+                return cells.map(c => '"' + (c.innerText || '').replace(/"/g, '""') + '"').join(',');
+            }).join('\r\n');
+        }
+
+        const table = document.getElementById('reportsTable');
+        document.getElementById('exportCsv').addEventListener('click', function(){
+            const csv = tableToCSV(table);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'leave-reports.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('btnPrint').addEventListener('click', function(){
+            window.print();
+        });
+
+        // Excel / PDF buttons placeholder: call server endpoints if implemented
+        document.getElementById('exportExcel').addEventListener('click', function(){
+            // If you implement server-side Excel export, redirect to that endpoint:
+            // location.href = '/Reports/ExportExcel';
+            alert('Server-side Excel export not implemented. Implement /Reports/ExportExcel to enable.');
+        });
+        document.getElementById('exportPdf').addEventListener('click', function(){
+            // If you implement server-side PDF export, redirect to that endpoint:
+            // location.href = '/Reports/ExportPdf';
+            alert('Server-side PDF export not implemented. Implement /Reports/ExportPdf to enable.');
+        });
+
+        document.getElementById('refreshList').addEventListener('click', function(){
+            location.reload();
+        });
+    })();
+</script>
+

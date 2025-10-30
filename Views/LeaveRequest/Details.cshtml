@@ -1,0 +1,282 @@
+﻿@model Leave_Management_system.Models.LeaveRequest
+@{
+    Layout = "~/Views/Shared/_HodLayout.cshtml";
+    var start = Model.StartDate.ToDateTime().Date;
+    var end = Model.EndDate.ToDateTime().Date;
+    var days = (int)(end - start).TotalDays + 1;
+}
+
+<section class="hod-content-card">
+    <div class="card header-card">
+        <h2>Leave Request</h2>
+        <div class="muted small">Review request and take action</div>
+    </div>
+
+    <div class="card details-card">
+        <div class="row">
+            <div class="col-left">
+                <p><strong>Name:</strong> @Model.EmployeeName</p>
+                <p><strong>Leave Type:</strong> @Model.LeaveType</p>
+                <p><strong>Start Date:</strong> @start.ToString("dd MMM yyyy")</p>
+                <p><strong>End date:</strong> @end.ToString("dd MMM yyyy")</p>
+                <p><strong>Days on leave:</strong> <span class="pill">@days days</span></p>
+            </div>
+
+            <div class="col-right">
+                <p><strong>Submitted:</strong> @Model.SubmittedAt.ToDateTime().ToString("dd MMM yyyy HH:mm")</p>
+                <p><strong>Status:</strong> <span class="status">@Model.Status</span></p>
+                @if (!string.IsNullOrEmpty(Model.DocumentUrl))
+                {
+                    <p><strong>Documents</strong></p>
+                    <a class="btn-download" target="_blank" rel="noopener" href="@Model.DocumentUrl">Download document</a>
+                }
+            </div>
+        </div>
+
+        <div class="section">
+            <label><strong>Reason for Leave</strong></label>
+            <div class="reason-box">@Model.Reason</div>
+        </div>
+
+        <div class="section">
+            <label><strong>Feedback</strong> <small class="muted">(will be saved as ReasonForStatus when you update)</small></label>
+
+            <form asp-controller="LeaveRequest" asp-action="UpdateStatus" method="post" class="inline-approve-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="newStatus" value="Approved" />
+                <textarea name="reason" id="approveFeedback" rows="3" placeholder="Enter optional feedback (will be saved)"></textarea>
+                <div class="actions-row">
+                    <button type="submit" class="btn btn-approve">Approve</button>
+                    <button type="button" class="btn btn-reject" id="openReject">Reject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="rejectTitle">
+    <div class="modal-backdrop" tabindex="-1"></div>
+    <div class="modal-panel" role="document">
+        <header class="modal-header">
+            <h3 id="rejectTitle">Reject Leave Request</h3>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
+        </header>
+
+        <form id="rejectForm" asp-controller="LeaveRequest" asp-action="UpdateStatus" method="post" class="modal-body">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <input type="hidden" name="newStatus" value="Rejected" />
+            <div class="field">
+                <label for="rejectReason">Reason for rejection (shown to employee)</label>
+                <textarea id="rejectReason" name="reason" rows="4" required></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel">Cancel</button>
+                <button type="submit" class="btn btn-danger">Reject Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Simple local styling to match prototype */
+    .hod-content-card {
+        padding: 20px;
+    }
+
+    .header-card {
+        margin-bottom: 12px;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    .details-card {
+        padding: 18px;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .row {
+        display: flex;
+        gap: 20px;
+    }
+
+    .col-left {
+        flex: 1 1 60%;
+    }
+
+    .col-right {
+        flex: 0 0 240px;
+    }
+
+    .pill {
+        display: inline-block;
+        background: #eefaf0;
+        color: #0b3a2a;
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .reason-box {
+        padding: 12px;
+        background: #fbfbfb;
+        border: 1px solid #eef2ee;
+        border-radius: 6px;
+        margin-top: 6px;
+    }
+
+    .section {
+        margin-top: 14px;
+    }
+
+    textarea[name="reason"], #rejectReason {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #e6ece6;
+    }
+
+    .actions-row {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-download {
+        display: inline-block;
+        padding: 8px 12px;
+        background: #fff;
+        border: 1px solid #e6ece6;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #06452a;
+    }
+
+    .btn-approve {
+        background: linear-gradient(90deg,#3db66a 0%, #0b3a2a 100%);
+        color: #fff;
+    }
+
+    .btn-reject {
+        background: #fff;
+        color: #b42d2d;
+        border: 1px solid rgba(180,45,45,0.12);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .modal[aria-hidden="false"] {
+            display: flex;
+        }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(6,69,42,0.35);
+    }
+
+    .modal-panel {
+        position: relative;
+        background: #fff;
+        border-radius: 10px;
+        max-width: 640px;
+        width: 96%;
+        z-index: 1001;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid #f1f3f2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        padding: 16px 18px;
+        display: block;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 12px 18px;
+        border-top: 1px solid #f1f3f2;
+    }
+
+    .btn-cancel {
+        background: #fff;
+        border: 1px solid #d8ded8;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .btn-danger {
+        background: #d9534f;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .modal-close {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    (function(){
+        const modal = document.getElementById('rejectModal');
+        const openBtn = document.getElementById('openReject');
+        if (!openBtn) return;
+        const backdrop = modal.querySelector('.modal-backdrop');
+        const close = modal.querySelector('.modal-close');
+        const cancel = modal.querySelector('.btn-cancel');
+
+        function open() { modal.setAttribute('aria-hidden','false'); setTimeout(()=>document.getElementById('rejectReason').focus(),100); }
+        function closeModal(){ modal.setAttribute('aria-hidden','true'); }
+
+        openBtn.addEventListener('click', open);
+        backdrop.addEventListener('click', closeModal);
+        close.addEventListener('click', closeModal);
+        cancel.addEventListener('click', closeModal);
+
+        // disable buttons on submit to prevent double submit
+        const rejectForm = document.getElementById('rejectForm');
+        if (rejectForm) {
+            rejectForm.addEventListener('submit', function () {
+                const btn = rejectForm.querySelector('.btn-danger');
+                if (btn) { btn.disabled = true; btn.textContent = 'Rejecting...'; }
+            });
+        }
+    })();
+</script>
+

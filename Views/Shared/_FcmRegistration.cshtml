@@ -1,0 +1,107 @@
+﻿@* _FcmRegistration.cshtml *@
+@* Include this partial in any layout used by authenticated users (Employee, Supervisor, HOD). *@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
+    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
+    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
+}
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
+
+<script>
+    (function () {
+      const firebaseConfig = @Html.Raw(firebaseConfigJson); // JSON object injected from server
+      const VAPID_KEY = "@vapidKey";
+
+      // Only run for authenticated sessions - layout that includes this normally has a session set
+      if (!@((HttpContextAccessor.HttpContext?.Session?.GetString("UserRole") != null).ToString().ToLower())) {
+        return;
+      }
+
+      firebase.initializeApp(firebaseConfig);
+      const messaging = firebase.messaging();
+
+      function getAntiForgeryToken() {
+        const input = document.querySelector('#__af__form input[name="__RequestVerificationToken"]') || document.querySelector('input[name="__RequestVerificationToken"]');
+        return input ? input.value : '';
+      }
+
+      async function postToServer(path, token) {
+        const af = getAntiForgeryToken();
+        const form = new FormData();
+        form.append('token', token);
+        const resp = await fetch(path, {
+          method: 'POST',
+          headers: { 'RequestVerificationToken': af },
+          body: form
+        });
+        return resp.ok;
+      }
+
+      async function ensureTokenRegistered() {
+        try {
+          if (Notification.permission !== 'granted') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') { console.log('Notifications not granted'); return; }
+          }
+
+          const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+          if (!token) return;
+
+          const stored = localStorage.getItem('fcm_token_registered_v1');
+          if (stored === token) { console.log('FCM token already registered'); return; }
+
+          const ok = await postToServer('/api/token/register', token);
+          if (ok) {
+            localStorage.setItem('fcm_token_registered_v1', token);
+            console.log('FCM token registered');
+          } else {
+            console.warn('Failed to register token with server');
+          }
+        } catch (e) {
+          console.error('FCM register error', e);
+        }
+      }
+
+      messaging.onMessage && messaging.onMessage(function(payload) {
+        console.log('Foreground FCM', payload);
+        // optional: add UI toast here
+      });
+
+      // Handle token refresh if supported
+      messaging.onTokenRefresh && messaging.onTokenRefresh(async () => {
+        try {
+          const newToken = await messaging.getToken({ vapidKey: VAPID_KEY });
+          if (newToken) {
+            await postToServer('/api/token/register', newToken);
+            localStorage.setItem('fcm_token_registered_v1', newToken);
+          }
+        } catch (e) { console.error('token refresh', e); }
+      });
+
+      // run
+      ensureTokenRegistered();
+
+      // Hook logout (find the logout form in the layout)
+      const logoutForm = document.querySelector('form[action*="/EmployeeAuth/Logout"], form[action*="/SupAuth/Logout"], form[action*="/HodAuth/Logout"]');
+      if (logoutForm) {
+        logoutForm.addEventListener('submit', async function (ev) {
+          ev.preventDefault();
+          try {
+            const token = localStorage.getItem('fcm_token_registered_v1');
+            if (token) {
+              await postToServer('/api/token/unregister', token);
+              try { await messaging.deleteToken(token); } catch (ignore) {}
+              localStorage.removeItem('fcm_token_registered_v1');
+            }
+          } catch (ex) { console.warn('unregister error', ex); }
+          logoutForm.submit();
+        }, { once: true });
+      }
+
+    })();
+</script>

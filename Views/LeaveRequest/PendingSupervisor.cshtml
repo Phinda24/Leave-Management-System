@@ -1,0 +1,13 @@
+﻿@* @model List<Leave_Management_system.Models.LeaveRequest>
+@{
+    Layout = "~/Views/Shared/_SupLayout.cshtml";
+}
+<partial name="_PendingList" model="Model" />
+ *@
+@model List<Leave_Management_system.Models.LeaveRequest>
+
+@{
+    Layout = ViewData["Layout"] as string ?? "~/Views/Shared/_SupLayout.cshtml";
+}
+
+<partial name="_PendingList" model="Model" />

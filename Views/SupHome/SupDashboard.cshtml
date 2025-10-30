@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Supervisor Dashboard";
+    Layout = "~/Views/Shared/_SupLayout.cshtml";
+}
+
+<div class="hod-dashboard">
+    <header class="dashboard-header">
+        <h2>Dashboard</h2>
+        <p class="muted">Welcome — use the sidebar to access leave requests and reports.</p>
+    </header>
+
+    <section>
+        <!-- dashboard cards / summaries go here -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card p-3">Team size: <strong>@ViewBag.TeamSize ?? "—"</strong></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3">Pending requests: <strong>@ViewBag.PendingCount ?? "—"</strong></div>
+            </div>
+        </div>
+    </section>
+</div>
