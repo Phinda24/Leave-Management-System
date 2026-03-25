@@ -1,6 +1,7 @@
 ﻿@model Leave_Management_system.Models.LeaveBalanceViewModel
 @{
     ViewData["Title"] = "My Leave Balances";
+    
 
     // safe date formatter that accepts either DateTime or nullable DateTime
     string FormatDate(object dtObj)
@@ -14,18 +15,122 @@
 
     var startDateStr = FormatDate(Model.StartDate);
     var endDateStr = FormatDate(Model.EndDate);
+
+    Layout = "_EmployeeLayout";
 }
 
-<link rel="stylesheet" href="~/css/leavebalances.css" />
+@* <link rel="stylesheet" href="~/css/leavebalances.css" /> *@
 
+<!-- Added inline style to make the full-screen background light green -->
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    /* light green page background */
+    body {
+        background-color: #e8f5e9; /* soft light green */
+        min-height: 100vh;
+    }
+
+    /* keep cards visually separate on the green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* optional: give a little spacing from the edges */
+    .page-container {
+        padding: 1.5rem;
+    }
+
+
+
+
+
+    /* --- Page / background --- */
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        background-color: #e8f5e9; /* soft light green page background */
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    /* --- Sidebar: fixed and full-height --- */
+    #sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh; /* cover full viewport height */
+        width: 260px; /* fixed width (adjust if you like) */
+        overflow-y: auto; /* allow sidebar to scroll independently */
+        background-color: #f1f9f3; /* subtle green panel - tweak as desired */
+        z-index: 1030; /* above page content but below modals */
+        padding: 1rem 0.75rem;
+    }
+
+        /* ensure inner list group stretches */
+        #sidebar-wrapper .sidebar-nav {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        /* make the profile card full width inside sidebar */
+        #sidebar-wrapper .profile-card {
+            width: 100%;
+        }
+
+    /* --- Page content sits to the right of the fixed sidebar --- */
+    #page-content-wrapper {
+        margin-left: 260px; /* same as sidebar width */
+        min-height: 100vh;
+        overflow-y: auto; /* page content scrolls separately */
+    }
+
+    /* small padding for the app area */
+    .app-container {
+        padding-top: 1rem;
+        padding-bottom: 3rem;
+    }
+
+    /* keep cards white for contrast on green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* --- Responsive: mobile behaviour (sidebar off-canvas) --- */
+    @@media (max-width: 767.98px) {
+        #sidebar-wrapper {
+            transform: translateX(-100%);
+            transition: transform 0.25s ease-in-out;
+            width: 220px;
+        }
+
+            #sidebar-wrapper.open {
+                transform: translateX(0);
+            }
+        /* page content takes full width on small screens */
+        #page-content-wrapper {
+            margin-left: 0;
+        }
+        /* adjust navbar toggler so it controls sidebar on small screens */
+        .navbar-toggler {
+            z-index: 1100; /* above sidebar so it's clickable */
+        }
+    }
+</style>
 <div class="leave-page">
     <main class="content">
         <div class="header">
-            <h2>My Leave Balances</h2>
-            <div class="user-menu">
+            @* <h2>My Leave Balances</h2> *@
+           @*  <div class="user-menu">
                 <span>@Model.FullName</span>
                 <a asp-controller="Auth" asp-action="Logout">Logout</a>
-            </div>
+            </div> *@
         </div>
 
         <div class="leave-grid">
@@ -164,5 +269,27 @@
 
     .details p {
         margin: 6px 0;
+    }
+</style>
+
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    /* light green page background */
+    body {
+        background-color: #e8f5e9; /* soft light green */
+        min-height: 100vh;
+    }
+
+    /* keep cards visually separate on the green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* optional: give a little spacing from the edges */
+    .page-container {
+        padding: 1.5rem;
     }
 </style>

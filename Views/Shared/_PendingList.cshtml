@@ -5,16 +5,9 @@
     ViewData["Title"] = "Pending Requests";
 
 }
-@{
-    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
-    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
-    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
-}
-@* @{
-    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
-    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
-    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "YOUR_VAPID_KEY";
-} *@
+
+<link rel="stylesheet" href="~/css/leave-applications.css" asp-append-version="true" />
+
 
 <div class="hod-dashboard">
     @* ----------------- PAGE ALERT (TempData) -----------------
@@ -77,45 +70,64 @@
                 <tbody>
                     @foreach (var r in Model)
                     {
-                        // Get the UTC time from Firestore
-                        var submittedUtc = r.SubmittedAt.ToDateTime();
-                        // Ensure the DateTime is treated as UTC
-                        submittedUtc = DateTime.SpecifyKind(submittedUtc, DateTimeKind.Utc);
+                        // Start / End safe conversion (nullable)
+                        DateTime? start = r.StartDate?.ToDateTime().Date;
+                        DateTime? end = r.EndDate?.ToDateTime().Date;
 
-                        DateTime submittedLocal;
-                        var start = r.StartDate.ToDateTime().Date;
-                        var end = r.EndDate.ToDateTime().Date;
-                        var days = (int)(end - start).TotalDays + 1;
-                        <tr>
-                            <td class="employee-name">@r.EmployeeName<br /><small class="muted">@r.EmployeeEmail</small></td>
-                            <td>@r.LeaveType</td>
-                            <td>@start.ToString("dd MMM yyyy") – @end.ToString("dd MMM yyyy")</td>
-                            <td>@days</td>
-                            @* <td>@r.SubmittedAt.ToDateTime().ToString("dd MMM yyyy HH:mm")</td> *@
-                            @{
+                        // Safe days calculation (handles nulls, half-day and end < start)
+                        double days = 0.0;
+                        if (r.IsHalfDay)
+                        {
+                            days = 0.5;
+                        }
+                        else if (start.HasValue && end.HasValue)
+                        {
+                            if (end.Value >= start.Value)
+                                days = (end.Value - start.Value).TotalDays + 1; // inclusive
+                            else
+                                days = 0.0;
+                        }
+
+                        // Pretty display: integers as "3", fractions as "0.5"
+                        string daysDisplay = (Math.Abs(days % 1) < 0.0001) ? ((int)days).ToString() : days.ToString("0.##");
+
+                        // SubmittedAt -> convert to local timezone safely
+                        DateTime? submittedLocal = null;
+                        if (r.SubmittedAt.HasValue)
+                        {
+                            // Get DateTime from Timestamp
+                            DateTime submittedUtc = r.SubmittedAt.Value.ToDateTime();
+                            // Ensure it's treated as UTC
+                            submittedUtc = DateTime.SpecifyKind(submittedUtc, DateTimeKind.Utc);
+
+                            try
+                            {
+                                TimeZoneInfo tz;
                                 try
                                 {
-                                    // Use IANA on Linux or Windows id - Try Africa/Johannesburg first (common on Linux),
-                                    // fallback to Windows id "South Africa Standard Time" if that fails.
-                                    TimeZoneInfo tz;
-                                    try
-                                    {
-                                        tz = TimeZoneInfo.FindSystemTimeZoneById("Africa/Johannesburg");
-                                    }
-                                    catch
-                                    {
-                                        tz = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
-                                    }
-
-                                    submittedLocal = TimeZoneInfo.ConvertTimeFromUtc(submittedUtc, tz);
+                                    tz = TimeZoneInfo.FindSystemTimeZoneById("Africa/Johannesburg");
                                 }
                                 catch
                                 {
-                                    // As a last fallback convert to server local time
-                                    submittedLocal = submittedUtc.ToLocalTime();
+                                    tz = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
                                 }
+
+                                submittedLocal = TimeZoneInfo.ConvertTimeFromUtc(submittedUtc, tz);
                             }
-                            <td>@submittedLocal.ToString("dd MMM yyyy HH:mm")</td>
+                            catch
+                            {
+                                // Last fallback -> server local time
+                                submittedLocal = submittedUtc.ToLocalTime();
+                            }
+                        }
+
+                        <tr>
+                            <td class="employee-name">@r.EmployeeName<br /><small class="muted">@r.EmployeeEmail</small></td>
+                            <td>@(string.IsNullOrEmpty(r.LeaveType) ? "-" : r.LeaveType)</td>
+                            <td>@(start?.ToString("dd MMM yyyy") ?? "N/A") – @(end?.ToString("dd MMM yyyy") ?? "N/A")</td>
+                            <td>@daysDisplay</td>
+
+                            <td>@(submittedLocal.HasValue? submittedLocal.Value.ToString("dd MMM yyyy HH:mm") : "N/A")</td>
 
                             <td>
                                 @if (!string.IsNullOrEmpty(r.DocumentUrl))
@@ -128,19 +140,16 @@
                                 }
                             </td>
 
-                            @* Friendly status display (uses GetDisplayStatus() if present on model) *@
                             <td>
                                 <span class="status">
                                     @{
-                                        // If you added GetDisplayStatus() to your model (as suggested), use it.
-                                        // Otherwise this will fall back to the raw Status string.
                                         string display = null;
-                                        try { display = r.GetDisplayStatus(); } catch { display = r.Status ?? "Pending"; }
+                                        try { display = r.GetDisplayStatus(); }
+                                        catch { display = r.Status ?? "Pending"; }
                                     }
                                     @display
                                 </span>
 
-                                @* small badge when supervisor already approved but waiting for HOD *@
                                 @if (r.SupervisorApproved && string.Equals(r.Status, "PendingHod", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <div style="margin-top:6px;font-size:12px;color:#0b3a2a;font-weight:600;">
@@ -150,7 +159,6 @@
                             </td>
 
                             <td class="actions-col">
-                                @* Approve form: send neutral operation (server decides final Status based on role) *@
                                 <form asp-controller="LeaveRequest" asp-action="UpdateStatus" method="post" class="inline-form">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@r.Id" />
@@ -164,6 +172,7 @@
                         </tr>
                     }
                 </tbody>
+
             </table>
         }
     </section>

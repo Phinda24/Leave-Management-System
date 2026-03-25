@@ -116,7 +116,7 @@ namespace Leave_Management_system.Controllers
                     HttpContext.Session.SetString("Uid", storedUid);
 
                 // Redirect to SupHome/Index so the view at Views/SupHome/Index.cshtml is used
-                return Redirect("/SupHome/Index");
+                return Redirect("/SupHome/SupDashboard");
             }
 
             ModelState.AddModelError("", "Invalid Email or Password, or user not found.");

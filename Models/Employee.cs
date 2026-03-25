@@ -29,14 +29,22 @@ namespace Leave_Management_system.Models
         public string Phone { get; set; } // Add this property to fix CS1061
         [FirestoreProperty]
         public string ProfileImageUrl { get; set; } // Add this if needed for consistency
+
+        [FirestoreProperty] public string EmployeeNumber { get; set; }
+
     }
     [FirestoreData]
     public class LeaveCategory
     {
-        [FirestoreProperty] 
+        [FirestoreProperty]
         public double Entitlement { get; set; }
         [FirestoreProperty]
         public double Taken { get; set; }
     }
+    public class FirebaseLoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public bool ReturnSecureToken { get; set; }
+    }
 }
-        

@@ -73,6 +73,7 @@
 /* form area */
 .card-body {
     padding: 20px;
+
 }
 
 .field {
@@ -218,3 +219,5 @@
         font-size: 16px;
     }
 }
+
+

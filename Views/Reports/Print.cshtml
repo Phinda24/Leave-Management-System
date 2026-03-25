@@ -1,0 +1,318 @@
+﻿@model Leave_Management_system.Models.ReportViewModel
+@{
+    ViewData["Title"] = "Leave Reports - Print";
+    Layout = null; // No layout for printing
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Leave Management System - Reports</title>
+    <style>
+        /* Print-specific styles */
+        @@media print {
+            body {
+                font-family: 'Arial', sans-serif;
+                font-size: 12px;
+                line-height: 1.4;
+                color: #000;
+                margin: 0;
+                padding: 20px;
+            }
+            
+            .print-header {
+                border-bottom: 2px solid #333;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .print-header h1 {
+                color: #000;
+                margin: 0;
+                font-size: 24px;
+            }
+            
+            .print-meta {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 15px;
+            }
+            
+            .summary-cards {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                margin: 20px 0;
+            }
+            
+            .summary-card {
+                border: 1px solid #ddd;
+                padding: 10px;
+                text-align: center;
+                background: #f9f9f9;
+            }
+            
+            .summary-card h3 {
+                margin: 0 0 5px 0;
+                font-size: 14px;
+                color: #666;
+            }
+            
+            .summary-card .value {
+                font-size: 18px;
+                font-weight: bold;
+                color: #000;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 11px;
+            }
+            
+            th {
+                background-color: #f0f0f0 !important;
+                color: #000 !important;
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+                font-weight: bold;
+            }
+            
+            td {
+                border: 1px solid #ddd;
+                padding: 6px;
+            }
+            
+            .badge {
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            .badge-success { background-color: #d4edda; color: #155724; }
+            .badge-danger { background-color: #f8d7da; color: #721c24; }
+            .badge-warning { background-color: #fff3cd; color: #856404; }
+            .badge-secondary { background-color: #e2e3e5; color: #383d41; }
+            .badge-info { background-color: #d1ecf1; color: #0c5460; }
+            .badge-primary { background-color: #cce5ff; color: #004085; }
+            
+            .no-print { display: none !important; }
+            
+            .page-break { page-break-before: always; }
+            
+            .filters-info {
+                background: #f8f9fa;
+                padding: 10px;
+                margin: 10px 0;
+                border-left: 4px solid #0b6b47;
+            }
+            
+            @@page {
+                size: landscape;
+                margin: 0.5cm;
+            }
+        }
+        
+        /* Screen styles for print preview */
+        @@media screen {
+            body {
+                font-family: 'Arial', sans-serif;
+                font-size: 14px;
+                padding: 20px;
+                background: #fff;
+            }
+            
+            .print-actions {
+                margin-bottom: 20px;
+                padding: 10px;
+                background: #f8f9fa;
+                border-radius: 5px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                margin-right: 10px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+            }
+            
+            .btn-primary { background: #007bff; color: white; }
+            .btn-secondary { background: #6c757d; color: white; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Actions (only visible on screen) -->
+    <div class="print-actions no-print">
+        <button class="btn btn-primary" onclick="window.print()">
+            🖨️ Print Report
+        </button>
+        <a href="@Url.Action("Index", new { 
+            startDate = Model.FilterStartDate, 
+            endDate = Model.FilterEndDate, 
+            leaveType = Model.FilterLeaveType, 
+            status = Model.FilterStatus, 
+            employeeId = Model.FilterEmployeeId 
+        })" class="btn btn-secondary">
+            ← Back to Reports
+        </a>
+        <span style="margin-left: 20px; color: #666;">
+            Generated on: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+        </span>
+    </div>
+
+    <!-- Report Header -->
+    <div class="print-header">
+        <h1>Leave Management System - Reports</h1>
+        <div class="print-meta">
+            <div>
+                <strong>Generated By:</strong> @Model.EmployeeName<br>
+                <strong>Email:</strong> @Model.Email<br>
+                <strong>Phone:</strong> @Model.Phone
+            </div>
+            <div style="text-align: right;">
+                <strong>Report Date:</strong> @DateTime.Now.ToString("yyyy-MM-dd")<br>
+                <strong>Print Date:</strong> @DateTime.Now.ToString("yyyy-MM-dd HH:mm")<br>
+                <strong>Total Records:</strong> @Model.ReportData.Count
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Filters -->
+    <div class="filters-info">
+        <strong>Active Filters:</strong>
+        Date Range: 
+        @(Model.FilterStartDate?.ToString("yyyy-MM-dd") ?? "All") 
+        to 
+        @(Model.FilterEndDate?.ToString("yyyy-MM-dd") ?? "All") 
+        | 
+        Leave Type: @(string.IsNullOrEmpty(Model.FilterLeaveType) || Model.FilterLeaveType == "All" ? "All" : Model.FilterLeaveType)
+        | 
+        Status: @(string.IsNullOrEmpty(Model.FilterStatus) || Model.FilterStatus == "All" ? "All" : Model.FilterStatus)
+        | 
+        Employee: @(string.IsNullOrEmpty(Model.FilterEmployeeId) || Model.FilterEmployeeId == "All" ? "All" : Model.Employees.FirstOrDefault(e => e.EmployeeId == Model.FilterEmployeeId)?.FullName ?? Model.FilterEmployeeId)
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h3>Total Requests</h3>
+            <div class="value">@Model.TotalRequests</div>
+        </div>
+        <div class="summary-card">
+            <h3>Approved</h3>
+            <div class="value">@Model.ApprovedCount</div>
+        </div>
+        <div class="summary-card">
+            <h3>Pending</h3>
+            <div class="value">@Model.PendingCount</div>
+        </div>
+        <div class="summary-card">
+            <h3>Total Leave Days</h3>
+            <div class="value">@Model.TotalLeaveDays</div>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Employee Name</th>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Date Submitted</th>
+                <th>Status</th>
+               @*  <th>Approver/Decliner</th> *@
+                <th>Date Actioned</th>
+                <th>Days</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ReportData)
+            {
+                <tr>
+                    <td>@item.EmployeeId</td>
+                    <td>@item.EmployeeName</td>
+                    <td>
+                        <span class="badge badge-info">@item.LeaveType</span>
+                    </td>
+                    <td>@item.StartDate?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                    <td>@item.EndDate?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                    <td>@item.SubmittedAt?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (item.Status == "Approved")
+                        {
+                            <span class="badge badge-success">Approved</span>
+                        }
+                        else if (item.Status == "Rejected")
+                        {
+                            <span class="badge badge-danger">Rejected</span>
+                        }
+                        else if (item.Status == "PendingHod")
+                        {
+                            <span class="badge badge-warning">Pending HOD</span>
+
+                        }
+                        @*  else if (item.Status == "Cancelled")
+                        {
+                            <span class="badge badge-secondary">Cancelled</span>
+                        } *@
+                        else
+                        {
+                            <span class="badge badge-secondary">@item.Status</span>
+                        }
+                    </td>
+                   @*  <td>@item.ApproverDecliner</td> *@
+                    <td>@item.DateActioned?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <span class="badge badge-primary">@item.DaysOnLeave</span>
+                    </td>
+                    <td>@item.Reason</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Report Footer -->
+    <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 10px; color: #666;">
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <strong>Leave Management System</strong><br>
+                Generated on: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+            </div>
+            <div style="text-align: right;">
+                Page <span class="page-number"></span><br>
+                Confidential Report
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add page numbers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-print if needed (optional)
+            // setTimeout(() => window.print(), 500);
+            
+            // Add page numbers
+            const totalPages = Math.ceil(document.querySelectorAll('tbody tr').length / 30); // approx 30 rows per page
+            document.querySelector('.page-number').textContent = '1 of ' + (totalPages || 1);
+        });
+        
+        // Auto-close after printing (optional)
+        window.onafterprint = function() {
+            // Uncomment the line below if you want to auto-close the print window
+            // window.close();
+        };
+    </script>
+</body>
+</html>

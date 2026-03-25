@@ -1,0 +1,144 @@
+﻿@model Leave_Management_system.Models.ReportViewModel
+
+@{
+    ViewData["Title"] = "Supervisor Reports";
+    Layout = "~/Views/Shared/_SupLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Supervisor-Specific Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-graph-up me-2"></i>Supervisor Reports</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Supervisor Name</h6>
+                            <p class="h5">@Model.EmployeeName</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Email</h6>
+                            <p class="h5">@Model.Email</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Phone</h6>
+                            <p class="h5">@Model.Phone</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Team Members</h6>
+                            <p class="h5">@ViewBag.TotalTeamMembers</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supervisor-Specific Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-2-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Team Requests</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalRequests</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-list-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Approved</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ApprovedCount</div>
+                            <div class="text-xs text-muted mt-1">
+                                @if (Model.TotalRequests > 0)
+                                {
+                                    <span>@((Model.ApprovedCount * 100 / Model.TotalRequests).ToString("0"))% of total</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2-4 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Rejected</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.RejectedCount</div>
+                            <div class="text-xs text-muted mt-1">
+                                @if (Model.TotalRequests > 0)
+                                {
+                                    <span>@((Model.RejectedCount * 100 / Model.TotalRequests).ToString("0"))% of total</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PendingCount</div>
+                            <div class="text-xs text-muted mt-1">
+                                @if (Model.TotalRequests > 0)
+                                {
+                                    <span>@((Model.PendingCount * 100 / Model.TotalRequests).ToString("0"))% of total</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Supervisor Approval Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.SupervisorApprovalRate</div>
+                            <div class="text-xs text-muted mt-1">Your approval decisions</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of the report content (filters and table) can be the same as Index.cshtml -->
+    @await Html.PartialAsync("_ReportFiltersAndTable", Model)
+</div>

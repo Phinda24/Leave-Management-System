@@ -1,113 +1,138 @@
+//{
+//  "indexes": [
+//    {
+//      "collectionGroup": "LeaveRequests",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "EmployeeId",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "StartDate",
+//          "order": "DESCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "LeaveRequests",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "Status",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "StartDate",
+//          "order": "DESCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "LeaveRequests",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "LeaveType",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "StartDate",
+//          "order": "DESCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "LeaveRequests",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "StartDate",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "EndDate",
+//          "order": "ASCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "LeaveRequests",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "EmployeeId",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "Status",
+//          "order": "ASCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "Employees",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "Email",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "Role",
+//          "order": "ASCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "Employees",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "Department",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "FullName",
+//          "order": "ASCENDING"
+//        }
+//      ]
+//    },
+//    {
+//      "collectionGroup": "Departments",
+//      "queryScope": "COLLECTION",
+//      "fields": [
+//        {
+//          "fieldPath": "DeptHead",
+//          "order": "ASCENDING"
+//        },
+//        {
+//          "fieldPath": "Name",
+//          "order": "ASCENDING"
+//        }
+//      ]
+//    }
+//  ],
+//  "fieldOverrides": []
+//}
+
+
 {
   "indexes": [
     {
-      "collectionGroup": "LeaveRequests",
+      "collectionId": "LeaveRequests",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "EmployeeId",
+          "fieldPath": "EmployeeEmail",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "StartDate",
+          "fieldPath": "SubmittedAt",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "LeaveRequests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "Status",
-          "order": "ASCENDING"
         },
         {
-          "fieldPath": "StartDate",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "LeaveRequests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "LeaveType",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "StartDate",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "LeaveRequests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "StartDate",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "EndDate",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "LeaveRequests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "EmployeeId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "Status",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "Employees",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "Email",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "Role",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "Employees",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "Department",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "FullName",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "Departments",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "DeptHead",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "Name",
+          "fieldPath": "__name__",
           "order": "ASCENDING"
         }
       ]

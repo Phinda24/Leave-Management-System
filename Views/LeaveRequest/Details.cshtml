@@ -1,9 +1,30 @@
 ﻿@model Leave_Management_system.Models.LeaveRequest
 @{
     Layout = "~/Views/Shared/_HodLayout.cshtml";
-    var start = Model.StartDate.ToDateTime().Date;
-    var end = Model.EndDate.ToDateTime().Date;
-    var days = (int)(end - start).TotalDays + 1;
+
+    DateTime? start = Model.StartDate?.ToDateTime().Date;
+    DateTime? end = Model.EndDate?.ToDateTime().Date;
+
+    // Safe calculation: handles nulls, half-day and end < start
+    double days = 0.0;
+    if (Model.IsHalfDay)
+    {
+        days = 0.5;
+    }
+    else if (start.HasValue && end.HasValue)
+    {
+        if (end.Value >= start.Value)
+        {
+            days = (end.Value - start.Value).TotalDays + 1; // inclusive
+        }
+        else
+        {
+            days = 0.0; // or set to -1 and render "Invalid" if you prefer
+        }
+    }
+
+    // Friendly display: integer as "3", fractional as "0.5"
+    string daysDisplay = (Math.Abs(days % 1) < 0.0001) ? ((int)days).ToString() : days.ToString("0.##");
 }
 
 <section class="hod-content-card">
@@ -17,13 +38,13 @@
             <div class="col-left">
                 <p><strong>Name:</strong> @Model.EmployeeName</p>
                 <p><strong>Leave Type:</strong> @Model.LeaveType</p>
-                <p><strong>Start Date:</strong> @start.ToString("dd MMM yyyy")</p>
-                <p><strong>End date:</strong> @end.ToString("dd MMM yyyy")</p>
+                <p><strong>Start Date:</strong> @start?.ToString("dd MMM yyyy")</p>
+                <p><strong>End date:</strong> @end?.ToString("dd MMM yyyy")</p>
                 <p><strong>Days on leave:</strong> <span class="pill">@days days</span></p>
             </div>
 
             <div class="col-right">
-                <p><strong>Submitted:</strong> @Model.SubmittedAt.ToDateTime().ToString("dd MMM yyyy HH:mm")</p>
+                <p><strong>Submitted:</strong> @Model.SubmittedAt?.ToDateTime().ToString("dd MMM yyyy HH:mm")</p>
                 <p><strong>Status:</strong> <span class="status">@Model.Status</span></p>
                 @if (!string.IsNullOrEmpty(Model.DocumentUrl))
                 {

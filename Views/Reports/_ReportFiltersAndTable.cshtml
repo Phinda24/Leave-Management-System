@@ -1,0 +1,181 @@
+﻿@model Leave_Management_system.Models.ReportViewModel
+
+<!-- Filters Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filter Reports</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-action="GenerateReport">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" asp-for="FilterStartDate" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" asp-for="FilterEndDate" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Leave Type</label>
+                                <select class="form-control" asp-for="FilterLeaveType">
+                                    <option value="All">All Types</option>
+                                    @foreach (var type in Model.LeaveTypes.Where(t => t != "All"))
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" asp-for="FilterStatus">
+                                    <option value="All">All Statuses</option>
+                                    @foreach (var status in Model.Statuses.Where(s => s != "All"))
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                       @*  <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Employee</label>
+                                <select class="form-control" asp-for="FilterEmployeeId">
+                                    <option value="All">All Employees</option>
+                                    @foreach (var employee in Model.Employees)
+                                    {
+                                        <option value="@employee.EmployeeId">@employee.FullName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div> *@
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success me-2">
+                                <i class="bi bi-filter me-1"></i>Apply Filters
+                            </button>
+                            <a href="@Url.Action(ViewContext.RouteData.Values["action"]?.ToString())" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Clear Filters
+                            </a>
+                            <a href="@Url.Action("ExportToCsv", new { 
+                                startDate = Model.FilterStartDate, 
+                                endDate = Model.FilterEndDate, 
+                                leaveType = Model.FilterLeaveType, 
+                                status = Model.FilterStatus, 
+                                employeeId = Model.FilterEmployeeId 
+                            })" class="btn btn-primary me-2">
+                                <i class="bi bi-download me-1"></i>Export to CSV
+                            </a>
+                            <a href="@Url.Action("PrintReport", new { 
+                                startDate = Model.FilterStartDate, 
+                                endDate = Model.FilterEndDate, 
+                                leaveType = Model.FilterLeaveType, 
+                                status = Model.FilterStatus, 
+                                employeeId = Model.FilterEmployeeId 
+                            })" class="btn btn-warning" target="_blank">
+                                <i class="bi bi-printer me-1"></i>Print Report
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reports Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-table me-2"></i>Leave Reports</h5>
+                <span class="badge bg-success">@Model.ReportData.Count records</span>
+            </div>
+            <div class="card-body">
+                @if (Model.ReportData.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover" id="reportsTable">
+                            <thead class="table-success">
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Employee Name</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Date Submitted</th>
+                                    <th>Status</th>
+                                   @*  <th>Approver/Decliner</th> *@
+                                    <th>Date Actioned</th>
+                                    <th>Days on Leave</th>
+                                    <th>Reason for Leave</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ReportData)
+                                {
+                                    <tr>
+                                        <td>@item.EmployeeId</td>
+                                        <td>@item.EmployeeName</td>
+                                        <td>
+                                            <span class="badge bg-info">@item.LeaveType</span>
+                                        </td>
+                                        <td>@item.StartDate?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                        <td>@item.EndDate?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                        <td>@item.SubmittedAt?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                        <td>
+                                            @if (item.Status == "Approved")
+                                            {
+                                                <span class="badge bg-success">Approved</span>
+                                            }
+                                            else if (item.Status == "Rejected")
+                                            {
+                                                <span class="badge bg-danger">Rejected</span>
+                                            }
+                                            else if (item.Status == "PendingHod")
+                                            {
+                                                <span class="badge bg-warning">Pending HOD</span>
+                                            }
+                                             @*    else if (item.Status == "Cancelled")
+                                                {
+                                                    <span class="badge badge-secondary">Cancelled</span>
+                                                } *@
+                                            else
+                                            {
+                                                <span class="badge bg-warning">@item.Status</span>
+                                            }
+                                        </td>
+                                        @* <td>@item.ApproverDecliner</td> *@
+                                        <td>@item.DateActioned?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                        <td>
+                                            <span class="badge bg-primary">@item.DaysOnLeave</span>
+                                        </td>
+                                        <td>@item.Reason</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h4 class="text-muted mt-3">No reports found</h4>
+                        <p class="text-muted">Try adjusting your filters to see more results.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

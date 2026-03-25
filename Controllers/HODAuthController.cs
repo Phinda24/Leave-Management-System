@@ -115,7 +115,7 @@ namespace Leave_Management_system.Controllers
                     HttpContext.Session.SetString("Uid", storedUid);
 
                 // Redirect to HodHome/Index so the view at Views/HodHome/Index.cshtml is used
-                return Redirect("/HodHome/Index");
+                return Redirect("/HodHome/HodDashboard");
             }
 
             ModelState.AddModelError("", "Invalid Email or Password, or user not found.");

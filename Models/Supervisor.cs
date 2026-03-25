@@ -25,5 +25,8 @@ namespace Leave_Management_system.Models
 
         [FirestoreProperty]
         public string Department { get; set; } = string.Empty;
+
+        [FirestoreProperty]
+        public string Phone { get; set; }
     }
 }

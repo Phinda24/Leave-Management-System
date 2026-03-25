@@ -2,11 +2,7 @@
 @{
     Layout = null; // explicit: this is the root layout
 }
-@{
-    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
-    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
-    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
-}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +15,29 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
+
+    <!-- Added inline style to make the full-screen background light green -->
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        /* light green page background */
+        body {
+            background-color: #e8f5e9; /* soft light green */
+            min-height: 100vh;
+        }
+
+        /* keep cards visually separate on the green background */
+        .card {
+            background-color: #ffffff;
+        }
+
+        /* optional: give a little spacing from the edges */
+        .page-container {
+            padding: 1.5rem;
+        }
+    </style>
 </head>
 
 <body>

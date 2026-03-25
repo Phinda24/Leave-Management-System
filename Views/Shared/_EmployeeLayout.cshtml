@@ -1,11 +1,8 @@
-﻿@using Microsoft.AspNetCore.Http
+﻿
+@using Microsoft.AspNetCore.Http
 @using Leave_Management_system.viewModel
 @inject IHttpContextAccessor HttpContextAccessor
-@{
-    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
-    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
-    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
-}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +14,111 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
     @RenderSection("Styles", required: false)
+
+    <!-- Added inline style to make the full-screen background light green -->
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        /* light green page background */
+        body {
+            background-color: #e8f5e9; /* soft light green */
+            min-height: 100vh;
+        }
+
+        /* keep cards visually separate on the green background */
+        .card {
+            background-color: #ffffff;
+        }
+
+        /* optional: give a little spacing from the edges */
+        .page-container {
+            padding: 1.5rem;
+        }
+
+
+
+
+
+        /* --- Page / background --- */
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background-color: #e8f5e9; /* soft light green page background */
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* --- Sidebar: fixed and full-height --- */
+        #sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh; /* cover full viewport height */
+            width: 260px; /* fixed width (adjust if you like) */
+            overflow-y: auto; /* allow sidebar to scroll independently */
+            background-color: #f1f9f3; /* subtle green panel - tweak as desired */
+            z-index: 1030; /* above page content but below modals */
+            padding: 1rem 0.75rem;
+        }
+
+            /* ensure inner list group stretches */
+            #sidebar-wrapper .sidebar-nav {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            /* make the profile card full width inside sidebar */
+            #sidebar-wrapper .profile-card {
+                width: 100%;
+            }
+
+        /* --- Page content sits to the right of the fixed sidebar --- */
+        #page-content-wrapper {
+            margin-left: 260px; /* same as sidebar width */
+            min-height: 100vh;
+            overflow-y: auto; /* page content scrolls separately */
+        }
+
+        /* small padding for the app area */
+        .app-container {
+            padding-top: 1rem;
+            padding-bottom: 3rem;
+        }
+
+        /* keep cards white for contrast on green background */
+        .card {
+            background-color: #ffffff;
+        }
+
+        /* --- Responsive: mobile behaviour (sidebar off-canvas) --- */
+        @@media (max-width: 767.98px) {
+            #sidebar-wrapper {
+                transform: translateX(-100%);
+                transition: transform 0.25s ease-in-out;
+                width: 220px;
+            }
+
+                #sidebar-wrapper.open {
+                    transform: translateX(0);
+                }
+            /* page content takes full width on small screens */
+            #page-content-wrapper {
+                margin-left: 0;
+            }
+            /* adjust navbar toggler so it controls sidebar on small screens */
+            .navbar-toggler {
+                z-index: 1100; /* above sidebar so it's clickable */
+            }
+        }
+    </style>
 </head>
+
 
 <body class="@($"{ViewContext.RouteData.Values["controller"]}-{ViewContext.RouteData.Values["action"]}".ToLower())">
 
@@ -85,6 +186,11 @@
                     <i class="bi bi-clock-history me-2"></i> Leave history
                 </a>
 
+                <a class="list-group-item list-group-item-action d-flex align-items-center @((ViewContext.RouteData.Values["controller"]?.ToString() ?? "").Equals("Reports", System.StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                   asp-controller="Reports" asp-action="Index">
+                    <i class="bi bi-graph-up me-2"></i> Reports
+                </a>
+
             </div>
         </nav>
 
@@ -110,7 +216,7 @@
                             @* <div class="d-flex align-items-center user-area">
                                 <div class="user-name me-3">@HttpContextAccessor.HttpContext?.Session?.GetString("FullName") ?? "User"</div> *@
                             <div class="position-absolute top-0 end-0 d-flex align-items-center user-area">
-                                <div class="user-name me-3">@HttpContextAccessor.HttpContext?.Session?.GetString("FullName") ?? "User"</div>
+                                <div class="user-name me-3">@HttpContextAccessor.HttpContext?.Session?.GetString("FullName") </div>
 
                                 @*  <div class="user-avatar-circle ms-2">
                                     <img src="@(HttpContextAccessor.HttpContext?.Session?.GetString("ProfileImageUrl") ?? Url.Content("~/images/default-avatar.png"))" alt="user" style="width:36px;height:36px;border-radius:50%" />
@@ -122,6 +228,10 @@
                                         Logout
                                     </button>
                                 </form>
+
+                                <button id="enableNotifications" class="btn btn-success ms-2 small" style="display: none;">
+                                    Enable Notifications
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -148,84 +258,37 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+                document.getElementById('enableNotifications').addEventListener('click', function() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('✅ Notifications enabled!');
+                    this.style.display = 'none';
+                    // Reload to trigger FCM registration
+                    location.reload();
+                }
+            });
+        });
+
+        // Show the button if permission is not granted
+        if (Notification.permission === 'default') {
+            document.getElementById('enableNotifications').style.display = 'inline-block';
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then(reg => console.log('Service Worker registered', reg.scope))
+                .catch(err => console.warn('Service Worker registration failed', err));
+        }
+
+
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 
-    @{
-        var firebaseConf = new
-        {
-            apiKey = "AIzaSyCBLH7BNFux4wjIf3Tw1WJ6xxk0nDXkb6U",
-            authDomain = "leavemanagementsystem-9cd7d.firebaseapp.com",
-            projectId = "leavemanagementsystem-9cd7d",
-            //storageBucket = "leavemanagementsystem-9cd7d.firebasestorage.app",
-            messagingSenderId = "271028255699",
-            appId = "1:271028255699:web:ce476aedaf8e5616e68d26",
-            //measurementId = "G-GETT12BC6V"
-        };
-        ViewData["FirebaseConfigJson"] = System.Text.Json.JsonSerializer.Serialize(firebaseConf);
-        ViewData["FirebaseVapidKey"] = "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
-    }
+    <!-- FCM Registration Partial -->
     @await Html.PartialAsync("_FcmRegistration")
 
-
-    @if (HttpContextAccessor.HttpContext?.Session?.GetString("EmployeeId") != null)
-    {
-
-        <!-- include the firebase script block here -->
-        <!-- Firebase JS SDK (compat is simplest for web push) -->
-        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
-
-        <script>
-            (function(){
-              const firebaseConfig = { /* your config */ };
-              const VAPID_KEY = "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
-              firebase.initializeApp(firebaseConfig);
-              const messaging = firebase.messaging();
-
-              function getAntiForgeryToken(){
-                const input = document.querySelector('#__af__form input[name="__RequestVerificationToken"]') || document.querySelector('input[name="__RequestVerificationToken"]');
-                return input ? input.value : '';
-              }
-
-              async function postTokenToServer(token){
-                const af = getAntiForgeryToken();
-                const form = new FormData(); form.append('token', token);
-                const resp = await fetch('/EmployeeAuth/RegisterFcmToken', {
-                  method: 'POST',
-                  headers: { 'RequestVerificationToken': af },
-                  body: form
-                });
-                return resp.ok;
-              }
-
-              async function ensureTokenRegistered(){
-                try {
-                  if (Notification.permission !== 'granted') {
-                    const perm = await Notification.requestPermission();
-                    if (perm !== 'granted') return;
-                  }
-                  const token = await messaging.getToken({ vapidKey: VAPID_KEY });
-                  if (!token) return;
-                  const stored = localStorage.getItem('fcm_token_registered_v1');
-                  if (stored === token) return;
-                  const ok = await postTokenToServer(token);
-                  if (ok) localStorage.setItem('fcm_token_registered_v1', token);
-                } catch(e){ console.error('FCM register error', e); }
-              }
-
-              messaging.onMessage && messaging.onMessage(payload => {
-                console.log('Foreground message', payload);
-                // show toast/update UI
-              });
-
-              // run on page load (layout)
-              ensureTokenRegistered();
-            })();
-        </script>
-
-
-
-
-}
 </body>
 </html>

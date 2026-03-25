@@ -1,0 +1,6 @@
+Employee Name,Leave Type,Start Date,End Date,Date Submitted,Status,Approver/Decliner,Date Actioned,Days on Leave,Reason for Leave
+"Teboho Rakhosi","Sick","2025-12-25","2026-01-01","2025-11-05","Approved","HOD001","2025-11-05","8","Medical"
+"Teboho Rakhosi","Annual","2025-12-25","2026-01-01","2025-11-05","Rejected","HOD001","2025-11-05","8","Personal"
+"Teboho Rakhosi","Study","2025-11-24","2025-11-28","2025-11-05","Approved","HOD001","2025-11-05","0,5","Educational"
+"Teboho Rakhosi","Annual","2025-11-17","2025-11-21","2025-11-05","Approved","HOD001","2025-11-05","5","Personal"
+"Teboho Rakhosi","Sick","2025-11-10","2025-11-14","2025-11-05","Approved","HOD001","2025-11-05","5","Medical"

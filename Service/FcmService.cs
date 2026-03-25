@@ -117,24 +117,28 @@
 //    }
 
 //}
+using FirebaseAdmin.Messaging;
+using Google.Cloud.Firestore;
+using Leave_Management_system.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FirebaseAdmin.Messaging;
-using Google.Cloud.Firestore;
-using Leave_Management_system.Models;
 
 namespace Leave_Management_system.Service
 {
     public class FcmService
     {
         private readonly FirestoreDb _db;
+        private readonly ILogger<FcmService> _logger;
 
-        public FcmService(FirestoreDb db)
+        public FcmService(FirestoreDb db, ILogger<FcmService> logger)
         {
             _db = db;
+            _logger = logger;
         }
+
 
         /// <summary>
         /// Send FCM notification to a list of userIds (these may be employees, supervisors or hods),
@@ -146,7 +150,12 @@ namespace Leave_Management_system.Service
             string body,
             IDictionary<string, string>? data = null)
         {
+            _logger.LogInformation("Sending FCM notification to {UserCount} users: {UserIds}",
+        userIds.Count(), string.Join(", ", userIds));
+
+
             data ??= new Dictionary<string, string>();
+
 
             // collects token -> users mapping so we can prune per-user tokens if FCM reports them as invalid
             var tokenToUsers = new Dictionary<string, List<string>>(StringComparer.Ordinal);
@@ -185,6 +194,9 @@ namespace Leave_Management_system.Service
                     if (!string.IsNullOrEmpty(t)) userTokens.Add(t);
                 }
 
+                // PASTE THIS RIGHT HERE - after token resolution
+                _logger.LogDebug("Found {TokenCount} FCM tokens for user {UserId}", userTokens.Count, uid);
+
                 foreach (var t in userTokens)
                 {
                     if (!tokenToUsers.TryGetValue(t, out var list))
@@ -214,10 +226,18 @@ namespace Leave_Management_system.Service
                 try
                 {
                     batchResult = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(multicast);
+
+                    if (batchResult?.SuccessCount > 0)
+                    {
+                        _logger.LogInformation("Successfully sent FCM notification to {SuccessCount} devices",
+                            batchResult.SuccessCount);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // In production: log exception with ILogger<FcmService>
+
+                    _logger.LogError(ex, "Failed to send FCM notification to {TokenCount} tokens for users: {UserIds}",
+                        allTokens.Count, string.Join(", ", userIds));
                     // If sending fails entirely, we still persist notifications (no tokens delivered)
                     batchResult = null;
                 }
@@ -283,9 +303,9 @@ namespace Leave_Management_system.Service
                                 });
                             }
                         }
-                        catch
+                        catch (Exception pruneEx)
                         {
-                            // ignore prune errors; log in production
+                            _logger.LogWarning(pruneEx, "Failed to prune invalid FCM token {BadToken} for user {UserId}", badToken, u);
                         }
                     }
                 }
@@ -309,9 +329,9 @@ namespace Leave_Management_system.Service
                 {
                     await _db.Collection("Notifications").Document(note.Id).SetAsync(note);
                 }
-                catch
+                catch (Exception persistEx)
                 {
-                    // in prod: log error
+                    _logger.LogError(persistEx, "Failed to persist notification for user {UserId}", userId);
                 }
             }
         }
@@ -332,9 +352,9 @@ namespace Leave_Management_system.Service
                     var snap = await docRef.GetSnapshotAsync();
                     if (snap.Exists) return snap;
                 }
-                catch
+                catch (Exception lookupEx)
                 {
-                    // ignore and try next (e.g., permission issues or not found)
+                    _logger.LogDebug(lookupEx, "Failed to lookup user {UserId} in collection {Collection}", userId, c);
                 }
             }
             return null;

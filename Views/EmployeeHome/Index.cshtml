@@ -14,89 +14,61 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
-   
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+
+    
 </head>
 
     <body>
     
-   
-
         <div class="row">
 
-       @*  <!-- Right main content -->
-        <div class="col-12 col-md-9">
-            <div class="row mb-3 gx-3">
-                <div class="col">
-                    <div class="card p-3">
-                        <small>Annual</small>
-                        <h4>@Model.AnnualCount</h4>
-                    </div>
+       
+        <div class="dashboard-main">
+            <!-- Left: Summary / Pending cards -->
+            <div class="summary-cards">
+                <div class="card p-3 text-center">
+                    <small class="text-muted">Annual</small>
+                    <h4>@Model.AnnualCount</h4>
                 </div>
-                <div class="col">
-                    <div class="card p-3">
-                        <small>Sick</small>
-                        <h4>@Model.SickCount</h4>
-                    </div>
+                <div class="card p-3 text-center">
+                    <small class="text-muted">Sick</small>
+                    <h4>@Model.SickCount</h4>
                 </div>
-                <div class="col">
-                    <div class="card p-3">
-                        <small>Study</small>
-                        <h4>@Model.StudyCount</h4>
-                    </div>
+                <div class="card p-3 text-center">
+                    <small class="text-muted">Study</small>
+                    <h4>@Model.StudyCount</h4>
                 </div>
-                <div class="col">
-                    <div class="card p-3">
-                        <small>Family Responsibility</small>
-                        <h4>@Model.FamilyCount</h4>
-                    </div>
+                <div class="card p-3 text-center">
+                    <small class="text-muted">Family</small>
+                    <h4>@Model.FamilyCount</h4>
                 </div>
-                <div class="col">
-                    <div class="card p-3">
-                        <small>Pending</small>
-                        <h4>@Model.PendingCount</h4>
-                    </div>
+                <div class="card p-3 text-center">
+                    <small class="text-muted">Pending</small>
+                    <h4>@Model.PendingCount</h4>
                 </div>
-            </div> *@
-        <div class="employee-cards">
-            <div class="row mb-3 gx-3">
-                <!-- your card columns here -->
-                <div class="row mb-3 gx-3">
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
-                            <small class="text-muted">Annual</small>
-                            <h4 class="mb-0">@Model.AnnualCount</h4>
+            </div>
+
+            <!-- Right: Calendar -->
+            <div class="calendar-wrapper">
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <div>
+                            <strong id="cal-month-year">Month Year</strong>
+                            <div id="cal-subtitle" style="font-size:0.85rem;color:#6b6f76;">Current month overview</div>
+                        </div>
+                        <div class="calendar-nav">
+                            <button id="prev-month" title="Previous month">&#10094;</button>
+                            <button id="next-month" title="Next month">&#10095;</button>
                         </div>
                     </div>
-
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
-                            <small class="text-muted">Sick</small>
-                            <h4 class="mb-0">@Model.SickCount</h4>
+                    <div id="calendar">
+                        <div class="calendar-weekdays">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                         </div>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
-                            <small class="text-muted">Study</small>
-                            <h4 class="mb-0">@Model.StudyCount</h4>
-                        </div>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
-                            <small class="text-muted">Family</small>
-                            <h4 class="mb-0">@Model.FamilyCount</h4>
-                        </div>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="card p-3 h-100 d-flex flex-column justify-content-center text-center">
-                            <small class="text-muted">Pending</small>
-                            <h4 class="mb-0">@Model.PendingCount</h4>
-                        </div>
+                        <div class="calendar-grid" id="calendar-grid"></div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -114,8 +86,8 @@
                                 <th>Leave Type</th>
                                 <th>Date Range</th>
                                 <th>Status</th>
-                                @*  <th>Reason</th>
-                            <th>Documents</th> *@
+                                  <th>Cancel Application</th>
+                          @*   <th>Documents</th> *@
                             </tr>
                         </thead>
                         <tbody>
@@ -125,29 +97,7 @@
                                 {
 
                                     <tr>
-                                        @*  <td>@r.LeaveType</td>
-                                    <td>@r.StartDate.ToString("yyyy-MM-dd") - @r.EndDate.ToString("yyyy-MM-dd")</td>
-                                    <td>
-                                        @if (r.Status == "Pending")
-                                        {
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                        }
-                                        else if (r.Status == "Approved")
-                                        {
-                                            <span class="badge bg-success">Approved</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-danger">Rejected</span>
-                                        }
-                                    </td>
-                                    <td>@r.Reason</td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(r.DocumentUrl))
-                                        {
-                                            <a target="_blank" title="Download" href="@r.DocumentUrl"><i class="fa fa-download"></i></a>
-                                        }
-                                    </td> *@ 
+                                     
                                        
                                             <td>@r.LeaveType</td>
                                         <td>@r.StartDate.ToString("yyyy-MM-dd") - @r.EndDate.ToString("yyyy-MM-dd")</td>
@@ -185,6 +135,23 @@
                                             <span class="badge bg-secondary">@status</span>
                                         }
                                     </td>
+                                    <td>
+                                        
+                                        @if (isPending)
+                                        {
+                                            <!-- Icon button that opens the modal and passes leave id & type -->
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="Cancel request"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#cancelModal"
+                                                    data-leaveid="@r.leaveRequestId"
+                                                    data-leavetype="@r.LeaveType">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
+                                    </td>
+
 
                                     </tr>
                                 }
@@ -197,10 +164,240 @@
                             }
                         </tbody>
                     </table>
+
+
+                <!-- Cancel confirmation modal (place once per page) -->
+                <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form asp-controller="LeaveRequest" asp-action="Cancel" method="post" id="cancelForm">
+                                @Html.AntiForgeryToken()
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Cancel Leave Request</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <input type="hidden" id="cancelLeaveId" name="id" value="" />
+
+                                    <p>
+                                        Are you sure you want to cancel this leave request
+                                        <strong id="cancelLeaveLabel"></strong>?
+                                    </p>
+
+                                    <div class="mb-3">
+                                        <label for="cancelReason" class="form-label">Reason (optional)</label>
+                                        <textarea id="cancelReason" name="reason" class="form-control" rows="3" placeholder="Optional: why are you cancelling?"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-danger">Cancel Request</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 </div>
             </div>
         </div>
+    <script>
+        (function () {
+          var cancelModalEl = document.getElementById('cancelModal');
+          if (!cancelModalEl) return;
+
+          cancelModalEl.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var leaveId = button.getAttribute('data-leaveid');
+            var leaveType = button.getAttribute('data-leavetype') || '';
+
+            // populate hidden input and label
+            document.getElementById('cancelLeaveId').value = leaveId;
+            document.getElementById('cancelLeaveLabel').textContent = leaveType ? leaveType : ('#' + leaveId);
+
+            // clear previous reason
+            document.getElementById('cancelReason').value = '';
+          });
+
+          // optional: prevent double submit
+          var cancelForm = document.getElementById('cancelForm');
+          cancelForm && cancelForm.addEventListener('submit', function () {
+            var btn = cancelForm.querySelector('button[type="submit"]');
+            if (btn) btn.disabled = true;
+          });
+        })();
     
+
+
+    
+        @{
+                    // Build list of leave dates (YYYY-MM-DD) server-side from Model.MyLeaves
+                    var _leaveDates = new List<string>();
+                    if (Model?.MyLeaves != null)
+                    {
+                                foreach (var r in Model.MyLeaves)
+                                {
+                                            // adjust if StartDate/EndDate are nullable types in your model
+                                            var start = r.StartDate;
+                                            var end = r.EndDate;
+                                            for (var d = start; d <= end; d = d.AddDays(1))
+                                            {
+                                                        _leaveDates.Add(d.ToString("yyyy-MM-dd"));
+                                            }
+                                }
+                    }
+
+                    var leaveDatesJs = _leaveDates.Count > 0
+                                    ? string.Join(",", _leaveDates.Select(d => $"'{d}'"))
+                                    : "";
+        }
+            document.addEventListener('DOMContentLoaded', function () {
+                const calendarGrid = document.getElementById('calendar-grid');
+                const monthYearLabel = document.getElementById('cal-month-year');
+                if (!calendarGrid || !monthYearLabel) return;
+
+                let today = new Date();
+                let currentMonth = today.getMonth();
+                let currentYear = today.getFullYear();
+
+                // injected from server: array of 'YYYY-MM-DD' strings
+                const leaveDates = [@Html.Raw(leaveDatesJs)];
+
+                const months = [
+                    "January","February","March","April","May","June",
+                    "July","August","September","October","November","December"
+                ];
+                const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+                function isLeave(fullIso) {
+                    return leaveDates.includes(fullIso);
+                }
+
+                function renderCalendar(month, year) {
+                    monthYearLabel.textContent = `${months[month]} ${year}`;
+                    calendarGrid.innerHTML = '';
+
+
+
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                    // empty cells before firstDay so the 1st aligns with correct weekday
+                    for (let i = 0; i < firstDay; i++) {
+                        const emptyCell = document.createElement('div');
+                        emptyCell.style.minHeight = '46px';
+                        calendarGrid.appendChild(emptyCell);
+                    }
+
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const dayCell = document.createElement('div');
+                        dayCell.className = 'text-center p-2 rounded position-relative calendar-day';
+                        dayCell.style.minHeight = '46px';
+                        dayCell.style.display = 'flex';
+                        dayCell.style.alignItems = 'center';
+                        dayCell.style.justifyContent = 'center';
+
+                        const mm = String(month + 1).padStart(2, '0');
+                        const dd = String(day).padStart(2, '0');
+                        const fullIso = `${year}-${mm}-${dd}`;
+
+                        const weekday = new Date(year, month, day).getDay(); // 0..6
+
+                        // If this date is a leave date -> apply leave styling
+                        if (isLeave(fullIso)) {
+                            dayCell.style.backgroundColor = '#d7f9d0'; // soft green
+                            dayCell.style.color = '#0b4b1a';
+                            dayCell.style.fontWeight = '700';
+                            // add small leave-dot for clarity (optional)
+                            const dot = document.createElement('span');
+                            dot.className = 'leave-dot';
+                            dot.style.width = '8px';
+                            dot.style.height = '8px';
+                            dot.style.background = '#6fcf3f';
+                            dot.style.borderRadius = '50%';
+                            dot.style.position = 'absolute';
+                            dot.style.bottom = '6px';
+                            dot.style.right = '8px';
+                            dot.style.boxShadow = '0 0 6px rgba(120,210,80,0.25)';
+                            dayCell.appendChild(dot);
+                        } else if (weekday === 0 || weekday === 6) {
+                            // weekend tint (if NOT a leave)
+                            dayCell.style.color = '#b30000';
+                            dayCell.style.backgroundColor = '#fff0f0';
+                            dayCell.style.fontWeight = '600';
+                        }
+
+                        // day number element
+                        const numSpan = document.createElement('span');
+                        numSpan.textContent = day;
+                        numSpan.style.zIndex = '2';
+                        dayCell.appendChild(numSpan);
+
+                        // Blue dot indicating current day (keeps number visible)
+                        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                            const blueDot = document.createElement('span');
+                            blueDot.style.width = '9px';
+                            blueDot.style.height = '9px';
+                            blueDot.style.backgroundColor = '#0d6efd';
+                            blueDot.style.borderRadius = '50%';
+                            blueDot.style.position = 'absolute';
+                            blueDot.style.bottom = '6px';
+                            blueDot.style.right = '8px';
+                            blueDot.style.boxShadow = '0 0 6px rgba(13,110,253,0.35)';
+                            dayCell.style.position = 'relative';
+                            dayCell.appendChild(blueDot);
+
+                            // emphasize today's number slightly
+                            numSpan.style.fontWeight = '800';
+                        }
+
+                        calendarGrid.appendChild(dayCell);
+                    }
+                }
+
+                // navigation buttons
+                const prevBtn = document.getElementById('prev-month');
+                const nextBtn = document.getElementById('next-month');
+                if (prevBtn) prevBtn.addEventListener('click', function () {
+                    currentMonth--;
+                    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                    renderCalendar(currentMonth, currentYear);
+                });
+                if (nextBtn) nextBtn.addEventListener('click', function () {
+                    currentMonth++;
+                    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                    renderCalendar(currentMonth, currentYear);
+                });
+
+                // initial render
+                renderCalendar(currentMonth, currentYear);
+            });
+    </script>
+
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        /* light green page background */
+        body {
+            background-color: #e8f5e9; /* soft light green */
+            min-height: 100vh;
+        }
+
+        /* keep cards visually separate on the green background */
+        .card {
+            background-color: #ffffff;
+        }
+
+        /* optional: give a little spacing from the edges */
+        .page-container {
+            padding: 1.5rem;
+        }
+    </style>
 
     </body>
 

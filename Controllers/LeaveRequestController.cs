@@ -46,27 +46,58 @@ namespace Leave_Management_system.Controllers
             return null;
         }
 
-        // ✅ Dashboard - latest 5 requests + employee info
+        private (string? id, string? email) GetSessionIdAndEmail()
+        {
+            var id = GetSessionValue("EmployeeId");
+            var email = GetSessionValue("Email");
+            return (id, email);
+        }
+
         public async Task<IActionResult> Dashboard(string? employeeId)
         {
-            employeeId ??= GetSessionValue("EmployeeId");
+            var pair = GetSessionIdAndEmail();
+            employeeId ??= pair.id;
+            var employeeEmail = pair.email;
 
-            if (string.IsNullOrEmpty(employeeId))
+            if (string.IsNullOrEmpty(employeeId) && string.IsNullOrEmpty(employeeEmail))
                 return RedirectToAction("Login", "Auth");
 
-            // Get the 5 most recent leave requests
-            var snapshots = await _db.Collection("LeaveRequests")
+            // Try by id first
+            QuerySnapshot snapshots;
+            if (!string.IsNullOrEmpty(employeeId))
+            {
+                snapshots = await _db.Collection("LeaveRequests")
                                      .WhereEqualTo("EmployeeId", employeeId)
                                      .OrderByDescending("StartDate")
                                      .Limit(5)
                                      .GetSnapshotAsync();
+            }
+            else
+            {
+                // fallback by email
+                snapshots = await _db.Collection("LeaveRequests")
+                                     .WhereEqualTo("EmployeeEmail", employeeEmail)
+                                     .OrderByDescending("StartDate")
+                                     .Limit(5)
+                                     .GetSnapshotAsync();
+            }
 
             var recentLeaves = snapshots.Documents.Select(d => d.ConvertTo<LeaveRequest>()).ToList();
             ViewBag.RecentLeaves = recentLeaves;
 
-            // Get employee info
-            var employeeDoc = await _db.Collection("Employees").Document(employeeId).GetSnapshotAsync();
-            if (!employeeDoc.Exists)
+            // Employee info (try finding employee doc either by id or email)
+            DocumentSnapshot employeeDoc = null;
+            if (!string.IsNullOrEmpty(employeeId))
+                employeeDoc = await _db.Collection("Employees").Document(employeeId).GetSnapshotAsync();
+
+            if ((employeeDoc == null || !employeeDoc.Exists) && !string.IsNullOrEmpty(employeeEmail))
+            {
+                // try lookup by email
+                var q = await _db.Collection("Employees").WhereEqualTo("Email", employeeEmail).Limit(1).GetSnapshotAsync();
+                if (q.Documents.Count > 0) employeeDoc = q.Documents.First();
+            }
+
+            if (employeeDoc == null || !employeeDoc.Exists)
             {
                 TempData["ErrorMessage"] = "Employee not found.";
                 return RedirectToAction("Login", "Auth");
@@ -76,22 +107,53 @@ namespace Leave_Management_system.Controllers
             return View(employee);
         }
 
-        // ✅ My Applications - show all employee requests
         [HttpGet]
         public async Task<IActionResult> MyApplications(string? employeeId)
         {
             try
             {
-                employeeId ??= GetSessionValue("EmployeeId");
-                if (string.IsNullOrEmpty(employeeId))
+                var pair = GetSessionIdAndEmail();
+                employeeId ??= pair.id;
+                var employeeEmail = pair.email;
+
+                if (string.IsNullOrEmpty(employeeId) && string.IsNullOrEmpty(employeeEmail))
                     return RedirectToAction("Login", "Auth");
 
-                Query query = _db.Collection("LeaveRequests").WhereEqualTo("EmployeeId", employeeId);
-                QuerySnapshot snapshot = await query.GetSnapshotAsync();
+                // Which statuses we consider "pending" for an employee
+                var pendingStatuses = new[] { StatusValues.Pending, StatusValues.PendingHod };
+
+                Query query;
+                QuerySnapshot snapshot;
+
+                if (!string.IsNullOrEmpty(employeeId))
+                {
+                    // Prefer EmployeeId; filter to only pending statuses
+                    query = _db.Collection("LeaveRequests")
+                               .WhereEqualTo("EmployeeId", employeeId)
+                               .WhereIn("Status", pendingStatuses);
+                    snapshot = await query.GetSnapshotAsync();
+
+                    // If nothing found by id, try fallback by email
+                    if (snapshot.Documents.Count == 0 && !string.IsNullOrEmpty(employeeEmail))
+                    {
+                        query = _db.Collection("LeaveRequests")
+                                   .WhereEqualTo("EmployeeEmail", employeeEmail)
+                                   .WhereIn("Status", pendingStatuses);
+                        snapshot = await query.GetSnapshotAsync();
+                    }
+                }
+                else
+                {
+                    // No id -> query by email
+                    query = _db.Collection("LeaveRequests")
+                               .WhereEqualTo("EmployeeEmail", employeeEmail)
+                               .WhereIn("Status", pendingStatuses);
+                    snapshot = await query.GetSnapshotAsync();
+                }
 
                 var leaveRequests = snapshot.Documents
                     .Select(d => d.ConvertTo<LeaveRequest>())
-                    .OrderByDescending(l => l.StartDate.ToDateTime())
+                    .OrderByDescending(l => l.StartDate?.ToDateTime())
                     .ToList();
 
                 return View(leaveRequests);
@@ -224,21 +286,50 @@ namespace Leave_Management_system.Controllers
             }
         }
 
-        // ✅ Leave History
         public async Task<IActionResult> History(string? employeeId)
-        {        
+        {
             try
             {
-                employeeId ??= GetSessionValue("EmployeeId");
-                if (string.IsNullOrEmpty(employeeId))
+                var pair = GetSessionIdAndEmail();
+                employeeId ??= pair.id;
+                var employeeEmail = pair.email;
+
+                if (string.IsNullOrEmpty(employeeId) && string.IsNullOrEmpty(employeeEmail))
                     return RedirectToAction("Login", "Auth");
 
-                Query query = _db.Collection("LeaveRequests").WhereEqualTo("EmployeeId", employeeId);
-                QuerySnapshot snapshot = await query.GetSnapshotAsync();
+                // Show completed/cancelled statuses in history
+                var historyStatuses = new[] { StatusValues.Approved, StatusValues.Rejected, "Cancelled" };
+
+                Query query;
+                QuerySnapshot snapshot;
+
+                if (!string.IsNullOrEmpty(employeeId))
+                {
+                    query = _db.Collection("LeaveRequests")
+                               .WhereEqualTo("EmployeeId", employeeId)
+                               .WhereIn("Status", historyStatuses);
+                    snapshot = await query.GetSnapshotAsync();
+
+                    // fallback to email if nothing found by id
+                    if (snapshot.Documents.Count == 0 && !string.IsNullOrEmpty(employeeEmail))
+                    {
+                        query = _db.Collection("LeaveRequests")
+                                   .WhereEqualTo("EmployeeEmail", employeeEmail)
+                                   .WhereIn("Status", historyStatuses);
+                        snapshot = await query.GetSnapshotAsync();
+                    }
+                }
+                else
+                {
+                    query = _db.Collection("LeaveRequests")
+                               .WhereEqualTo("EmployeeEmail", employeeEmail)
+                               .WhereIn("Status", historyStatuses);
+                    snapshot = await query.GetSnapshotAsync();
+                }
 
                 var leaveRequests = snapshot.Documents
                     .Select(d => d.ConvertTo<LeaveRequest>())
-                    .OrderByDescending(l => l.StartDate.ToDateTime())
+                    .OrderByDescending(l => l.StartDate?.ToDateTime())
                     .ToList();
 
                 return View(leaveRequests);
@@ -268,7 +359,6 @@ namespace Leave_Management_system.Controllers
             var requests = docs.Documents.Select(d => d.ConvertTo<LeaveRequest>()).ToList();
             return View(requests);
         }
-
         [HttpGet]
         public async Task<IActionResult> DebugRequest(string id)
         {
@@ -279,21 +369,25 @@ namespace Leave_Management_system.Controllers
 
             var lr = doc.ConvertTo<LeaveRequest>();
 
+            // Safe formatting for nullable timestamps
+            string SafeFormat(Timestamp? ts) => ts.HasValue ? ts.Value.ToDateTime().ToString("o") : null;
+
             return Json(new
             {
                 lr.Id,
                 lr.Status,
                 lr.SupervisorApproved,
                 lr.SupervisorId,
-                SupervisorApprovedAt = lr.SupervisorApprovedAt.ToDateTime().ToString("o"),
+                SupervisorApprovedAt = SafeFormat(lr.SupervisorApprovedAt),
                 lr.SupervisorReason,
                 lr.HodApproved,
                 lr.HodId,
-                HodApprovedAt = lr.HodApprovedAt.ToDateTime().ToString("o"),
+                HodApprovedAt = SafeFormat(lr.HodApprovedAt),
                 lr.HodReason,
-                ApprovalHistory = lr.ApprovalHistory?.Select(h => new { h.Level, h.Action, h.By, At = h.At.ToDateTime().ToString("o"), h.Reason })
+                ApprovalHistory = lr.ApprovalHistory?.Select(h => new { h.Level, h.Action, h.By, At = (h.At.HasValue ? h.At.Value.ToDateTime().ToString("o") : null), h.Reason })
             });
         }
+
 
         public async Task<IActionResult> Pending()
         {
@@ -344,13 +438,10 @@ namespace Leave_Management_system.Controllers
             }
             return businessDays;
         }
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(string id, string operation, string reason)
         {
-            // operation expected: "approve" or "reject"
             operation = (operation ?? string.Empty).Trim().ToLowerInvariant();
 
             if (string.IsNullOrEmpty(id))
@@ -359,7 +450,6 @@ namespace Leave_Management_system.Controllers
             if (operation != "approve" && operation != "reject")
                 return BadRequest("Unknown operation. Expected 'approve' or 'reject'.");
 
-            // get role from session: should be "Supervisor" or "HOD"
             var role = (HttpContext.Session.GetString("UserRole") ?? string.Empty).Trim();
             if (string.IsNullOrEmpty(role))
                 return Unauthorized("Missing user role in session.");
@@ -368,7 +458,7 @@ namespace Leave_Management_system.Controllers
 
             try
             {
-                // --- Read public holidays from Firestore BEFORE starting the transaction ---
+                // --- Read public holidays (unchanged) ---
                 var publicHolidays = new HashSet<DateTime>();
                 try
                 {
@@ -385,36 +475,27 @@ namespace Leave_Management_system.Controllers
                                 if (o is Google.Cloud.Firestore.Timestamp ts) hd = ts.ToDateTime().Date;
                                 else if (DateTime.TryParse(o?.ToString(), out var parsed)) hd = parsed.Date;
                             }
-                            catch { /* ignore parse errors for this doc and continue */ }
+                            catch { }
                             if (hd.HasValue) break;
                         }
                         if (hd.HasValue) publicHolidays.Add(hd.Value);
                     }
                 }
-                catch
-                {
-                    // proceed with empty holiday set if read fails; optionally log this.
-                }
+                catch { }
 
-                // --- Run transaction ---
                 await _db.RunTransactionAsync(async transaction =>
                 {
-
                     var snap = await transaction.GetSnapshotAsync(docRef);
                     if (!snap.Exists)
                         throw new Exception("Leave request not found.");
 
-                    // Convert to your model
                     var lr = snap.ConvertTo<LeaveRequest>();
 
-
-                    // Ensure ApprovalHistory exists
                     if (lr.ApprovalHistory == null)
                         lr.ApprovalHistory = new List<ApprovalRecord>();
 
                     var now = Timestamp.FromDateTime(DateTime.UtcNow);
 
-                    // choose user identifier for "By" field (prefer explicit ids)
                     var userId = HttpContext.Session.GetString("SupID")
                                  ?? HttpContext.Session.GetString("HodID")
                                  ?? HttpContext.Session.GetString("EmployeeId")
@@ -425,7 +506,6 @@ namespace Leave_Management_system.Controllers
                     var level = role.Equals("HOD", StringComparison.OrdinalIgnoreCase) ? "HOD" : "Supervisor";
                     var recordAction = operation == "approve" ? "Approved" : "Rejected";
 
-                    // Append history record (in-memory)
                     var newRecord = new ApprovalRecord
                     {
                         Level = level,
@@ -436,23 +516,17 @@ namespace Leave_Management_system.Controllers
                     };
                     lr.ApprovalHistory.Add(newRecord);
 
-
-
-                    // Prepare updates dictionary (only fields we want to change)
                     var updates = new Dictionary<string, object>
-            {
-                { "ApprovalHistory", lr.ApprovalHistory }
-            };
+                    {
+                        { "ApprovalHistory", lr.ApprovalHistory }
+                    };
 
                     if (operation == "approve")
                     {
                         if (level == "Supervisor")
                         {
-                            // Supervisor approves: set supervisor fields and move to PendingHod
                             if (!string.Equals(lr.Status, StatusValues.Pending, StringComparison.OrdinalIgnoreCase))
-                            {
                                 throw new InvalidOperationException("Request is not in a state that Supervisor can approve.");
-                            }
 
                             updates["SupervisorApproved"] = true;
                             updates["SupervisorId"] = userId;
@@ -468,18 +542,20 @@ namespace Leave_Management_system.Controllers
                                 throw new InvalidOperationException("Request is not in a state that HOD can approve.");
                             }
 
-                            // --- BUSINESS-DAY DEDUCTION (only when HOD approves) ---
                             if (lr.HodApproved)
-                            {
                                 throw new InvalidOperationException("This request has already been approved by HOD.");
-                            }
 
-                            // Compute days to deduct using business-days-only calculator and holiday set
-                            DateTime start = lr.StartDate.ToDateTime();
-                            DateTime end = lr.EndDate.ToDateTime();
-                            double daysToDeduct = CalculateBusinessDays(start, end, lr.IsHalfDay, publicHolidays);
+                            // --- SAFE: ensure StartDate and EndDate exist ---
+                            var start = lr.StartDate?.ToDateTime();
+                            var end = lr.EndDate?.ToDateTime();
+                            if (!start.HasValue || !end.HasValue)
+                                throw new InvalidOperationException("Leave request is missing StartDate or EndDate.");
 
-                            // Normalize leave type -> taken & balance field names (use lowercase comparisons)
+                            DateTime startDt = start.Value;
+                            DateTime endDt = end.Value;
+
+                            double daysToDeduct = CalculateBusinessDays(startDt, endDt, lr.IsHalfDay, publicHolidays);
+
                             var lt = (lr.LeaveType ?? "").Trim().ToLowerInvariant();
                             string takenField = "AnnualLeaveTaken";
                             string balanceField = "AnnualLeaveBalance";
@@ -499,34 +575,29 @@ namespace Leave_Management_system.Controllers
                                 takenField = "FamilyLeaveTaken";
                                 balanceField = "FamilyLeaveBalance";
                             }
-                            // else default: annual
 
-                            // Firestore doc for balances
                             var balancesRef = _db.Collection("LeaveBalances").Document(lr.EmployeeId);
-
-                            // Read balances inside the same transaction (so we can decide create vs update)
                             var balSnap = await transaction.GetSnapshotAsync(balancesRef);
 
                             if (!balSnap.Exists)
                             {
                                 var newFields = new Dictionary<string, object>
-                        {
-                            { "EmployeeId", lr.EmployeeId },
-                            { takenField, daysToDeduct },
-                            { balanceField, FieldValue.Increment(-daysToDeduct) }
-                        };
+                                {
+                                    { "EmployeeId", lr.EmployeeId },
+                                    { takenField, daysToDeduct },
+                                    { balanceField, FieldValue.Increment(-daysToDeduct) }
+                                };
                                 transaction.Set(balancesRef, newFields, SetOptions.MergeAll);
                             }
                             else
                             {
                                 transaction.Update(balancesRef, new Dictionary<string, object>
-                        {
-                            { takenField, FieldValue.Increment(daysToDeduct) },
-                            { balanceField, FieldValue.Increment(-daysToDeduct) }
-                        });
+                                {
+                                    { takenField, FieldValue.Increment(daysToDeduct) },
+                                    { balanceField, FieldValue.Increment(-daysToDeduct) }
+                                });
                             }
 
-                            // Now set HOD approval fields into the leave request updates
                             updates["HodApproved"] = true;
                             updates["HodId"] = userId;
                             updates["HodApprovedAt"] = now;
@@ -545,7 +616,7 @@ namespace Leave_Management_system.Controllers
                             updates["SupervisorApprovedAt"] = now;
                             updates["SupervisorReason"] = reason ?? string.Empty;
                         }
-                        else // HOD reject
+                        else
                         {
                             updates["HodApproved"] = false;
                             updates["HodId"] = userId;
@@ -554,22 +625,24 @@ namespace Leave_Management_system.Controllers
                         }
                     }
 
-                    // finally apply the leave request updates (only once)
                     transaction.Update(docRef, updates);
                 });
 
-                // notify the employee that the request was approved/rejected
+                // Notify employee (safe formatting)
                 try
                 {
                     var doc = await _db.Collection("LeaveRequests").Document(id).GetSnapshotAsync();
                     if (doc.Exists)
                     {
                         var lr = doc.ConvertTo<LeaveRequest>();
+
+                        string FormatDate(Timestamp? t) => t.HasValue ? t.Value.ToDateTime().ToString("yyyy-MM-dd") : "N/A";
+
                         var employeeToNotify = lr.EmployeeId;
                         var title = operation == "approve" ? "Leave Approved" : "Leave Rejected";
                         var body = operation == "approve"
-                            ? $"Your leave request ({lr.LeaveType}) from {lr.StartDate.ToDateTime():yyyy-MM-dd} to {lr.EndDate.ToDateTime():yyyy-MM-dd} was approved."
-                            : $"Your leave request ({lr.LeaveType}) from {lr.StartDate.ToDateTime():yyyy-MM-dd} to {lr.EndDate.ToDateTime():yyyy-MM-dd} was rejected. Reason: {reason}";
+                            ? $"Your leave request ({lr.LeaveType}) from {FormatDate(lr.StartDate)} to {FormatDate(lr.EndDate)} was approved."
+                            : $"Your leave request ({lr.LeaveType}) from {FormatDate(lr.StartDate)} to {FormatDate(lr.EndDate)} was rejected. Reason: {reason}";
 
                         var data = new Dictionary<string, string>
                         {
@@ -585,13 +658,11 @@ namespace Leave_Management_system.Controllers
                     // log in production
                 }
 
-                // success
                 TempData["Success"] = "Request updated.";
                 return RedirectToAction("Pending");
             }
             catch (Exception ex)
             {
-                // In production use a logger. For now, surface a friendly message.
                 TempData["Error"] = $"Could not update status: {ex.Message}";
                 return RedirectToAction("Pending");
             }
@@ -698,7 +769,7 @@ namespace Leave_Management_system.Controllers
                     StudyLeaveTaken = studyTaken,
                 };
 
-              
+
                 if (doc.ContainsField("StartDate"))
                 {
                     var o = doc.GetValue<object>("StartDate");
@@ -736,6 +807,117 @@ namespace Leave_Management_system.Controllers
                 return "";
             }
         }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(string id, string? reason)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest("Missing id.");
+
+            // determine current user (employee) from session
+            var employeeId = GetSessionValue("EmployeeId") ?? HttpContext.Session.GetString("EmployeeId");
+            if (string.IsNullOrEmpty(employeeId))
+                return Unauthorized("Session expired. Please log in.");
+
+            var docRef = _db.Collection("LeaveRequests").Document(id);
+
+            try
+            {
+                // run transaction to validate & update atomically
+                await _db.RunTransactionAsync(async transaction =>
+                {
+                    var snap = await transaction.GetSnapshotAsync(docRef);
+                    if (!snap.Exists)
+                        throw new InvalidOperationException("Leave request not found.");
+
+                    var lr = snap.ConvertTo<LeaveRequest>();
+
+                    // ensure only owner can cancel
+                    if (!string.Equals(lr.EmployeeId, employeeId, StringComparison.OrdinalIgnoreCase))
+                        throw new UnauthorizedAccessException("You can only cancel your own leave requests.");
+
+                    var currentStatus = (lr.Status ?? "").Trim();
+
+                    // Prevent cancelling if already finalised
+                    if (string.Equals(currentStatus, StatusValues.Approved, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(currentStatus, StatusValues.Rejected, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(currentStatus, "Cancelled", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(currentStatus, "Canceled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidOperationException("This request cannot be cancelled in its current state.");
+                    }
+
+                    // ensure ApprovalHistory exists
+                    if (lr.ApprovalHistory == null)
+                        lr.ApprovalHistory = new List<ApprovalRecord>();
+
+                    var now = Timestamp.FromDateTime(DateTime.UtcNow);
+
+                    var userId = employeeId; // the canceller is the employee
+                    var cancelRecord = new ApprovalRecord
+                    {
+                        Level = "Employee",
+                        Action = "Cancelled",
+                        By = userId,
+                        Reason = reason ?? string.Empty,
+                        At = now
+                    };
+                    lr.ApprovalHistory.Add(cancelRecord);
+
+                    // prepare updates
+                    var updates = new Dictionary<string, object>
+            {
+                { "Status", "Cancelled" },
+                { "CancelledAt", now },
+                { "CancelReason", reason ?? string.Empty },
+                { "ApprovalHistory", lr.ApprovalHistory }
+            };
+
+                    transaction.Update(docRef, updates);
+                });
+
+                // Notify supervisor/HOD (best-effort; don't block on notification failures)
+                try
+                {
+                    var (supervisorId, hodId) = await _fcmService.GetSupervisorAndHodForEmployee(employeeId);
+                    var recipients = new List<string>();
+                    if (!string.IsNullOrEmpty(supervisorId)) recipients.Add(supervisorId);
+                    if (!string.IsNullOrEmpty(hodId) && hodId != supervisorId) recipients.Add(hodId);
+
+                    if (recipients.Any())
+                    {
+                        var employeeName = HttpContext.Session.GetString("FullName") ?? "An employee";
+                        var title = "Leave Cancelled";
+                        var body = $"{employeeName} cancelled a leave request.";
+                        var data = new Dictionary<string, string>
+                {
+                    { "leaveId", id },
+                    { "action", "cancelled" }
+                };
+
+                        await _fcmService.SendAndPersistNotificationAsync(recipients, title, body, data);
+                    }
+                }
+                catch
+                {
+                    // in production: log the notification exception
+                }
+
+                TempData["SuccessMessage"] = "Leave request cancelled successfully.";
+                return RedirectToAction("MyApplications", new { employeeId = employeeId });
+            }
+            catch (Exception ex)
+            {
+                // surface a friendly error
+                TempData["ErrorMessage"] = $"Could not cancel leave request: {ex.Message}";
+                return RedirectToAction("MyApplications", new { employeeId = employeeId });
+            }
+        }
+
+
+      
 
     }
 }

@@ -1,8 +1,31 @@
 ﻿@model Leave_Management_system.Models.LeaveRequest
 @{
     ViewData["Title"] = "Apply for Leave";
+    Layout = "_EmployeeLayout";
+
 }
 
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    /* light green page background */
+    body {
+        background-color: #e8f5e9; /* soft light green */
+        min-height: 100vh;
+    }
+
+    /* keep cards visually separate on the green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* optional: give a little spacing from the edges */
+    .page-container {
+        padding: 1.5rem;
+    }
+</style>
 <link rel="stylesheet" href="~/css/apply-leave.css" />
 
 <div class="apply-container">
@@ -45,6 +68,7 @@
                     <option value="Medical">Medical</option>
                     <option value="Family Emergency">Family Emergency</option>
                     <option value="Study Purposes">Study Purposes</option>
+                    <option value="Study Purposes">Other</option>
                 </select>
             </div>
 

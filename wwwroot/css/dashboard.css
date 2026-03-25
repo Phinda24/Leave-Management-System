@@ -1,0 +1,283 @@
+﻿/* ======================================= */
+/* 🌿 MODERN SOFT LIME GLOW DASHBOARD THEME */
+/* ======================================= */
+
+/* ---------- Base & Typography ---------- */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9faf9;
+    color: #1f2d22;
+    line-height: 1.5;
+}
+
+h4, h5 {
+    margin: 0;
+    font-weight: 700;
+}
+
+/* ---------- Dashboard Layout ---------- */
+.dashboard-main {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    animation: fadeIn 0.6s ease-in;
+}
+
+/* ---------- Summary Cards ---------- */
+.summary-cards {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 18px;
+}
+
+    .summary-cards .card {
+        background: linear-gradient(180deg, #f7ffef 0%, #e1f8cb 100%);
+        border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(100, 180, 70, 0.15);
+        text-align: center;
+        padding: 20px 14px;
+        transition: all 0.25s ease;
+        cursor: default;
+        border: 1px solid rgba(175, 220, 140, 0.3);
+    }
+
+        .summary-cards .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(100, 180, 70, 0.25);
+            background: linear-gradient(180deg, #f2ffe3 0%, #d7f7a8 100%);
+        }
+
+        .summary-cards .card small.text-muted {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #557a3a;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .summary-cards .card h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3c7a10;
+            text-shadow: 0 1px 0 #e4ffd5;
+        }
+
+/* ---------- Calendar ---------- */
+.calendar-wrapper {
+    flex: 1;
+    min-width: 320px;
+}
+
+.calendar-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f9fff0 100%);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(100, 180, 70, 0.15);
+    border: 1px solid rgba(160, 200, 130, 0.25);
+    animation: fadeInUp 0.6s ease;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #295c00;
+    border-bottom: 1px solid #dff0c9;
+    padding-bottom: 6px;
+}
+
+    .calendar-header strong {
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+.calendar-nav button {
+    border: none;
+    background: transparent;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #4a8a1e;
+    transition: all 0.2s ease;
+}
+
+    .calendar-nav button:hover {
+        color: #1b4500;
+        transform: scale(1.1);
+    }
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    text-align: center;
+    font-size: 0.85rem;
+    color: #b30000; /* red weekends */
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+/* ---------- Calendar Grid ---------- */
+#calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    min-height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #22312a;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+    .calendar-day:hover {
+        background: #f0ffe2; /* lime hover */
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(150, 230, 100, 0.25);
+    }
+
+    /* Highlight Today */
+    .calendar-day.today {
+        background: linear-gradient(90deg, #e6fcd9, #c8f7a3);
+        border: 2px solid #a3e86f;
+        font-weight: 700;
+        color: #2a5a00;
+        box-shadow: 0 0 10px rgba(163, 232, 111, 0.5);
+    }
+
+    /* Leave Days */
+    .calendar-day.leave {
+        background: #d7f9d0;
+        color: #0b4b1a;
+        font-weight: 600;
+        box-shadow: inset 0 0 0 1px #b5f1a1;
+    }
+
+    /* Weekends */
+    .calendar-day.weekend {
+        color: #b30000;
+        background-color: #fff0f0;
+        font-weight: 600;
+    }
+
+/* ---------- Table (Leave History) ---------- */
+.card .card-header {
+    background: transparent;
+    border-bottom: 0;
+    font-weight: 700;
+    color: #295c00;
+    font-size: 1.15rem;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+    .table .table-light th {
+        background: transparent;
+        font-weight: 700;
+        color: #5a685a;
+        border-bottom: 0;
+    }
+
+    .table tbody tr {
+        background: linear-gradient(180deg, #f4ffe5 0%, #e6fcd9 100%);
+        border-radius: 10px;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(120, 180, 90, 0.1);
+    }
+
+        .table tbody tr:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(100, 160, 80, 0.2);
+        }
+
+        .table tbody tr td {
+            vertical-align: middle;
+            border: 0;
+            padding: 14px 18px;
+        }
+
+/* ---------- Badges ---------- */
+.badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+    .badge.bg-warning {
+        background: #e9ffa8;
+        color: #4a5f36;
+    }
+
+    .badge.bg-success {
+        background: #baff80;
+        color: #1e4d00;
+        box-shadow: 0 0 6px rgba(150, 250, 100, 0.3);
+    }
+
+    .badge.bg-danger {
+        background: #ff9b9b;
+        color: #580000;
+    }
+
+/* ---------- Animations ---------- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 992px) {
+    .dashboard-main {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .summary-cards, .calendar-wrapper {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .summary-cards {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+
+    .calendar-day {
+        min-height: 38px;
+    }
+}

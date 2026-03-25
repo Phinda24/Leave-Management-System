@@ -1,0 +1,425 @@
+﻿@model Leave_Management_system.Models.ReportViewModel
+
+@{
+    ViewData["Title"] = "Reports";
+    Layout = "~/Views/Shared/_EmployeeLayout.cshtml"; // This will auto-adjust based on user role
+}
+
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-graph-up me-2"></i>Reports</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Name</h6>
+                             <p class="h5">@Model.EmployeeName</p> 
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Email</h6>
+                            <p class="h5">@Model.Email</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Phone no</h6>
+                            <p class="h5">@Model.Phone</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+ <!-- Summary Cards - Updated with Rejected Card -->
+<div class="row mb-4">
+    <!-- Total Requests Card -->
+    <div class="col-xl-2-4 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Requests</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalRequests</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-list-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approved Card -->
+    <div class="col-xl-2-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Approved</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ApprovedCount</div>
+                        <div class="text-xs text-muted mt-1">
+                            @if (Model.TotalRequests > 0)
+                            {
+                                <span>@((Model.ApprovedCount * 100 / Model.TotalRequests).ToString("0"))% of total</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejected Card - NEW -->
+    <div class="col-xl-2-4 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Rejected</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.RejectedCount</div>
+                        <div class="text-xs text-muted mt-1">
+                            @if (Model.TotalRequests > 0)
+                            {
+                                <span>@((Model.RejectedCount * 100 / Model.TotalRequests).ToString("0"))% of total</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Card -->
+    <div class="col-xl-2-4 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PendingCount</div>
+                        <div class="text-xs text-muted mt-1">
+                            @if (Model.TotalRequests > 0)
+                            {
+                                <span>@((Model.PendingCount * 100 / Model.TotalRequests).ToString("0"))% of total</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Leave Days Card -->
+    <div class="col-xl-2-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Leave Days</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalLeaveDays</div>
+                        <div class="text-xs text-muted mt-1">
+                            @if (Model.ApprovedCount > 0)
+                            {
+                                <span>Avg: @((Model.TotalLeaveDays / Model.ApprovedCount).ToString("0.0")) days</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-week fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Filters Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filter Reports</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="GenerateReport">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" asp-for="FilterStartDate" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" asp-for="FilterEndDate" />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label">Leave Type</label>
+                                    <select class="form-control" asp-for="FilterLeaveType">
+                                        <option value="All">All Types</option>
+                                        @foreach (var type in Model.LeaveTypes.Where(t => t != "All"))
+                                        {
+                                            <option value="@type">@type</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" asp-for="FilterStatus">
+                                        <option value="All">All Statuses</option>
+                                        @foreach (var status in Model.Statuses.Where(s => s != "All"))
+                                        {
+                                            <option value="@status">@status</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            @* <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label">Employee</label>
+                                    <select class="form-control" asp-for="FilterEmployeeId">
+                                        <option value="All">All Employees</option>
+                                        @foreach (var employee in Model.Employees)
+                                        {
+                                            <option value="@employee.EmployeeId">@employee.FullName</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div> *@
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success me-2">
+                                    <i class="bi bi-filter me-1"></i>Apply Filters
+                                </button>
+                                <a href="@Url.Action("Index")" class="btn btn-outline-secondary me-2">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Clear Filters
+                                </a>
+                                <a href="@Url.Action("ExportToCsv", new { 
+                                    startDate = Model.FilterStartDate, 
+                                    endDate = Model.FilterEndDate, 
+                                    leaveType = Model.FilterLeaveType, 
+                                    status = Model.FilterStatus, 
+                                    employeeId = Model.FilterEmployeeId 
+                                })" class="btn btn-primary">
+                                    <i class="bi bi-download me-1"></i>Export to CSV
+                                </a>
+                                <a href="@Url.Action("PrintReport", new { 
+                                    startDate = Model.FilterStartDate, 
+                                    endDate = Model.FilterEndDate, 
+                                    leaveType = Model.FilterLeaveType, 
+                                    status = Model.FilterStatus, 
+                                    employeeId = Model.FilterEmployeeId 
+                                })" class="btn btn-warning" target="_blank">
+                                    <i class="bi bi-printer me-1"></i>Print Report
+                                    </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Reports Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table me-2"></i>Leave Reports</h5>
+                    <span class="badge bg-success">@Model.ReportData.Count records</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.ReportData.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover" id="reportsTable">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Employee ID</th>
+                                        <th>Employee Name</th>
+                                        <th>Leave Type</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Date Submitted</th>
+                                        <th>Status</th>
+
+                                        <th>Date Actioned</th> 
+                                        <th>Days on Leave</th>
+                                        <th>Reason for Leave</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ReportData)
+                                    {
+                                        <tr>
+                                           <td>@item.EmployeeId</td>
+                                            <td>@(string.IsNullOrEmpty(item.EmployeeName) ? "Unknown" : item.EmployeeName)</td>
+                                            <td>
+                                                <span class="badge bg-info">@(string.IsNullOrEmpty(item.LeaveType) ? "Unknown" : item.LeaveType)</span>
+                                            </td>
+                                            <td>@item.StartDate?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                            <td>@item.EndDate?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                            <td>@item.SubmittedAt?.ToDateTime().ToString("yyyy-MM-dd")</td>
+                                            <td>
+                                                @if (item.Status == "Approved")
+                                                {
+                                                    <span class="badge bg-success">Approved</span>
+                                                }
+                                                else if (item.Status == "Rejected")
+                                                {
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                }
+                                                else if (item.Status == "PendingHod")
+                                                {
+                                                    <span class="badge bg-warning">Pending HOD</span>
+                                                }
+                                              @*    else if (item.Status == "Cancelled")
+                                                {
+                                                    <span class="badge badge-secondary">Cancelled</span>
+                                                } *@
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">@(string.IsNullOrEmpty(item.Status) ? "Unknown" : item.Status)</span>
+                                                }
+                                            </td>
+
+                                            <td>@item.DateActioned?.ToDateTime().ToString("yyyy-MM-dd")</td> 
+                                            <td>
+                                                <span class="badge bg-primary">@item.DaysOnLeave</span>
+                                            </td>
+                                            <td>@item.Reason</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No reports found</h4>
+                            <p class="text-muted">Try adjusting your filters to see more results.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        // Initialize DataTables if you have the library, or basic sorting
+        $(document).ready(function() {
+            // Simple client-side sorting
+            $('#reportsTable').DataTable({
+                pageLength: 25,
+                order: [[5, 'desc']] // Sort by Date Submitted descending
+            });
+        });
+
+        // Set default dates to current month
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            if (!document.querySelector('input[asp-for="FilterStartDate"]').value) {
+                document.querySelector('input[asp-for="FilterStartDate"]').valueAsDate = firstDay;
+            }
+            if (!document.querySelector('input[asp-for="FilterEndDate"]').value) {
+                document.querySelector('input[asp-for="FilterEndDate"]').valueAsDate = today;
+            }
+        });
+
+     
+        // Card click interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make cards clickable to filter by status
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', function() {
+                    const cardType = this.querySelector('.text-uppercase').textContent.trim();
+                    
+                    let status = '';
+                    switch(cardType) {
+                        case 'Approved':
+                            status = 'Approved';
+                            break;
+                        case 'Rejected':
+                            status = 'Rejected';
+                            break;
+                        case 'Pending':
+                            status = 'Pending';
+                            break;
+                        default:
+                            return; // Don't filter for other cards
+                    }
+                    
+                    // Set the status filter and submit the form
+                    document.querySelector('#FilterStatus').value = status;
+                    document.querySelector('form').submit();
+                });
+            });
+
+            // Add hover effects
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.transition = 'transform 0.2s ease';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+             // Direct print function (optional)
+        function printReport() {
+            var printUrl = '@Url.Action("PrintReport", new { 
+                startDate = Model.FilterStartDate, 
+                endDate = Model.FilterEndDate, 
+                leaveType = Model.FilterLeaveType, 
+                status = Model.FilterStatus, 
+                employeeId = Model.FilterEmployeeId 
+            })';
+            
+            var printWindow = window.open(printUrl, '_blank');
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+        }
+
+        // Keyboard shortcut for printing (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+        });   
+    </script>
+}

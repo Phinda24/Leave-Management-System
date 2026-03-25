@@ -5,6 +5,7 @@ firebase.initializeApp({
     apiKey: "AIzaSyCBLH7BNFux4wjIf3Tw1WJ6xxk0nDXkb6U",
     authDomain: "leavemanagementsystem-9cd7d.firebaseapp.com",
     projectId: "leavemanagementsystem-9cd7d",
+    storageBucket: "leavemanagementsystem-9cd7d.firebasestorage.app",
     messagingSenderId: "271028255699",
     appId: "1:271028255699:web:ce476aedaf8e5616e68d26"
 });
@@ -13,10 +14,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
+    console.log('[SW] Received background message:', payload);
     const title = payload.notification?.title || 'Notification';
     const options = {
         body: payload.notification?.body,
-        data: payload.data
+        icon: '/images/default-avatar.png' // or use a simple icon
     };
     self.registration.showNotification(title, options);
 });

@@ -1,10 +1,116 @@
-﻿@model List<Leave_Management_system.Models.LeaveRequest>
+﻿
+
+@model List<Leave_Management_system.Models.LeaveRequest>
 
 @{
     ViewData["Title"] = "My Leave History";
+    Layout = "_EmployeeLayout";
 
 }
 
+<link rel="stylesheet" href="~/css/leave-history.css" asp-append-version="true" />
+<!-- Added inline style to make the full-screen background light green -->
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    /* light green page background */
+    body {
+        background-color: #e8f5e9; /* soft light green */
+        min-height: 100vh;
+    }
+
+    /* keep cards visually separate on the green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* optional: give a little spacing from the edges */
+    .page-container {
+        padding: 1.5rem;
+    }
+
+
+
+
+
+    /* --- Page / background --- */
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        background-color: #e8f5e9; /* soft light green page background */
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    /* --- Sidebar: fixed and full-height --- */
+    #sidebar-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh; /* cover full viewport height */
+        width: 260px; /* fixed width (adjust if you like) */
+        overflow-y: auto; /* allow sidebar to scroll independently */
+        background-color: #f1f9f3; /* subtle green panel - tweak as desired */
+        z-index: 1030; /* above page content but below modals */
+        padding: 1rem 0.75rem;
+    }
+
+        /* ensure inner list group stretches */
+        #sidebar-wrapper .sidebar-nav {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        /* make the profile card full width inside sidebar */
+        #sidebar-wrapper .profile-card {
+            width: 100%;
+        }
+
+    /* --- Page content sits to the right of the fixed sidebar --- */
+    #page-content-wrapper {
+        margin-left: 260px; /* same as sidebar width */
+        min-height: 100vh;
+        overflow-y: auto; /* page content scrolls separately */
+    }
+
+    /* small padding for the app area */
+    .app-container {
+        padding-top: 1rem;
+        padding-bottom: 3rem;
+    }
+
+    /* keep cards white for contrast on green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* --- Responsive: mobile behaviour (sidebar off-canvas) --- */
+    @@media (max-width: 767.98px) {
+        #sidebar-wrapper {
+            transform: translateX(-100%);
+            transition: transform 0.25s ease-in-out;
+            width: 220px;
+        }
+
+            #sidebar-wrapper.open {
+                transform: translateX(0);
+            }
+        /* page content takes full width on small screens */
+        #page-content-wrapper {
+            margin-left: 0;
+        }
+        /* adjust navbar toggler so it controls sidebar on small screens */
+        .navbar-toggler {
+            z-index: 1100; /* above sidebar so it's clickable */
+        }
+    }
+</style>
 
 <h2>My Leave History</h2>
 
@@ -12,7 +118,6 @@
    asp-action="Index"
    asp-route-employeeId="@Context.Request.Query["EmployeeId"]"
    class="btn btn-sm btn-success">
-
     Back to Dashboard
 </a>
 
@@ -26,58 +131,69 @@
             <th>Status</th>
         </tr>
     </thead>
-<tbody>
-    @foreach (var leave in Model)
-    {
-        <tr>
-            <td>@leave.LeaveType</td>
-            <td>@(leave.StartDate != null ? leave.StartDate.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
-            <td>@(leave.EndDate != null ? leave.EndDate.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
-            <td>@(string.IsNullOrWhiteSpace(leave.Reason) ? "-" : leave.Reason)</td>
-            <td>
-                @if (leave.Status == "Approved")
-                {
-                    <span class="badge bg-success">Approved</span>
-                }
-                else if (leave.Status == "Rejected")
-                {
-                    <span class="badge bg-danger">Rejected</span>
-                }
-                else
-                {
-                    <span class="badge bg-warning text-dark">Pending</span>
+    <tbody>
+        @foreach (var leave in Model)
+        {
+            <tr>
+                <td>@leave.LeaveType</td>
+                <td>@(leave.StartDate != null ? leave.StartDate?.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
+                <td>@(leave.EndDate != null ? leave.EndDate?.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
+                <td>@(string.IsNullOrWhiteSpace(leave.Reason) ? "-" : leave.Reason)</td>
 
-                    @if (User.IsInRole("HOD") || User.IsInRole("Supervisor"))
-                    {
-                        <div class="mt-2 d-flex gap-2">
-                            <form asp-action="Approve" asp-controller="LeaveRequest" method="post">
-                                <input type="hidden" name="id" value="@leave.Id" />
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="bi bi-check-circle"></i> Approve
-                                </button>
-                            </form>
-                            <form asp-action="Reject" asp-controller="LeaveRequest" method="post">
-                                <input type="hidden" name="id" value="@leave.Id" />
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    <i class="bi bi-x-circle"></i> Reject
-                                </button>
-                            </form>
-                        </div>
-                    }
+                @* --- Robust status cell (replacement) --- *@
+                @{
+                    var status = (leave.Status ?? string.Empty).Trim();
                 }
-            
-    @(leave.DateApplied is DateTime dateApplied && dateApplied != DateTime.MinValue
-        ? dateApplied.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)
-        : "")
-</td>
-        </tr>
-    }
-</tbody>
+                <td>
+                    @if (leave.Status == "Approved")
+                    {
+                        <span class="badge bg-success">Approved</span>
+                    }
+                    else if (leave.Status == "Rejected")
+                    {
+                        <span class="badge bg-danger">Rejected</span>
+                    }
+                    else if (leave.Status == "Cancelled")
+                    {
+                        <span class="badge bg-secondary">Cancelled</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+
+                        @if (User.IsInRole("HOD") || User.IsInRole("Supervisor"))
+                        {
+                            <div class="mt-2 d-flex gap-2">
+                                <form asp-action="Approve" asp-controller="LeaveRequest" method="post">
+                                    <input type="hidden" name="id" value="@leave.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </form>
+                                <form asp-action="Reject" asp-controller="LeaveRequest" method="post">
+                                    <input type="hidden" name="id" value="@leave.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-x-circle"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
+
+                <div class="small text-muted mt-1">
+                    @(leave.DateApplied is DateTime dateApplied && dateApplied != DateTime.MinValue
+                                        ? dateApplied.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)
+                                        : "")
+                </div>
+            </td>
+            </tr>
+        }
+    </tbody>
 </table>
 
 @section Styles {
-    <style>
-        body {
+   @*  <style>
+       /*  body {
             background-color: #f8f9fa !important;
         }
 
@@ -95,6 +211,28 @@
         .table tbody tr:hover {
             background-color: #f1f3f5;
             transition: 0.2s ease;
+        } */
+    </style> *@
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        /* light green page background */
+        body {
+            background-color: #e8f5e9; /* soft light green */
+            min-height: 100vh;
+        }
+
+        /* keep cards visually separate on the green background */
+        .card {
+            background-color: #ffffff;
+        }
+
+        /* optional: give a little spacing from the edges */
+        .page-container {
+            padding: 1.5rem;
         }
     </style>
 }

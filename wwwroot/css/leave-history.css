@@ -1,0 +1,273 @@
+﻿/* leave-history-modern.css
+   Modern, soft-lime themed table & controls for My Leave History
+   + fixed header/content alignment using CSS Grid
+*/
+
+:root {
+    --bg: #f6fbf2;
+    --card: #ffffff;
+    --accent: #2a5a00;
+    --lime-300: #c8f7a3;
+    --lime-400: #a3e86f;
+    --muted: #6b6f76;
+    --danger: #ff9b9b;
+    --danger-deep: #c74242;
+    --shadow: 0 10px 30px rgba(50,120,30,0.08);
+}
+
+/* page background */
+body {
+    background: var(--bg);
+    color: #f8f9fa;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 18px;
+}
+
+/* Heading & back button */
+h2 {
+    color: var(--accent);
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.2px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+a.btn-success {
+    background: linear-gradient(90deg, #bff08d, var(--lime-400));
+    border: 0;
+    color: #143400;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(100,180,60,0.12);
+    padding: 7px 12px;
+    border-radius: 8px;
+    transition: transform .14s ease, box-shadow .14s ease;
+}
+
+    a.btn-success:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(90,160,50,0.16);
+    }
+
+/* ----- TABLE GRID ALIGNMENT SETTINGS ----- */
+/* Use grid for header and each body row so columns align */
+.table {
+    width: 100%;
+    display: block; /* allow custom grid header + rows */
+    border-collapse: separate;
+    border-spacing: 0;
+    background: transparent;
+}
+
+/* Choose a grid layout that fits your columns:
+   LeaveType | Start Date | End Date | Reason | Status
+   Adjust widths as needed. */
+:root {
+    --col-leave: 2fr;
+    --col-start: 120px;
+    --col-end: 120px;
+    --col-reason: 1.5fr;
+    --col-status: 160px;
+}
+
+/* Head group rendered as its own block to align with rows below */
+.table thead {
+    display: block;
+    margin-bottom: 10px;
+}
+
+    /* header row uses same grid template */
+    .table thead tr {
+        display: grid;
+        grid-template-columns: var(--col-leave) var(--col-start) var(--col-end) var(--col-reason) var(--col-status);
+        gap: 12px;
+        align-items: center;
+        background: linear-gradient(180deg,#f0ffe6,#e6fcd9);
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+    /* header cells */
+    .table thead th {
+        display: block;
+        padding: 6px 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-size: 0.82rem;
+        border: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+/* Body block */
+.table tbody {
+    display: block;
+    width: 100%;
+}
+
+    /* Each body row uses the same grid template as the header */
+    .table tbody tr {
+        display: grid;
+        grid-template-columns: var(--col-leave) var(--col-start) var(--col-end) var(--col-reason) var(--col-status);
+        gap: 12px;
+        align-items: center;
+        background: linear-gradient(180deg,#ffffff,#f6fff0);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        padding: 14px 12px;
+        box-shadow: var(--shadow);
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+        /* Row hover */
+        .table tbody tr:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 36px rgba(80,150,40,0.12);
+        }
+
+    /* Cells become block-level for grid behavior */
+    .table tbody td {
+        display: block;
+        padding: 0; /* padding handled on row */
+        vertical-align: middle;
+        border: 0;
+        color: #243425;
+        font-size: 0.95rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+        /* Ensure status cell content (badges/buttons) sits to the right */
+        .table tbody td:last-child {
+            justify-self: end;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+/* small meta text (date applied inside the status cell) */
+.meta {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+/* ----- Status styles & badges ----- */
+.badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+/* Approved */
+tr.status-Approved {
+    background: linear-gradient(180deg,#f3fff0,#e4fbd2);
+}
+
+    tr.status-Approved td {
+        color: #153d00;
+    }
+
+.badge.bg-success {
+    background: linear-gradient(90deg,#bff08d,var(--lime-400));
+    color: #103300;
+    box-shadow: 0 4px 10px rgba(100,190,60,0.12);
+}
+
+/* Rejected */
+tr.status-Rejected {
+    background: linear-gradient(180deg,#fff0f0,#ffdede);
+}
+
+    tr.status-Rejected td {
+        color: var(--danger-deep);
+    }
+
+.badge.bg-danger {
+    background: linear-gradient(90deg,#ffb8b8,#ff9b9b);
+    color: #6b0000;
+    box-shadow: 0 4px 10px rgba(255,120,120,0.09);
+}
+
+/* Pending */
+tr.status-Pending {
+    background: linear-gradient(180deg,#fffdf0,#fff6d0);
+}
+
+    tr.status-Pending td {
+        color: #6a5a00;
+    }
+
+.badge.bg-warning {
+    background: linear-gradient(90deg,#fff8b0,#fff2a0);
+    color: #5a4700;
+    box-shadow: 0 4px 10px rgba(220,200,80,0.09);
+}
+
+/* Action buttons inside rows */
+.btn-sm {
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.btn-success.btn-sm {
+    background: linear-gradient(90deg,#9fe36a,#6fcf3f);
+    color: #062a00;
+    border: 0;
+    box-shadow: 0 4px 8px rgba(90,160,40,0.08);
+}
+
+.btn-danger.btn-sm {
+    background: linear-gradient(90deg,#ff9b9b,#ff7979);
+    color: #5a0000;
+    border: 0;
+    box-shadow: 0 4px 8px rgba(255,110,110,0.06);
+}
+
+    .btn-success.btn-sm:hover, .btn-danger.btn-sm:hover {
+        transform: translateY(-2px);
+    }
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 900px) {
+    /* hide header to save space */
+    .table thead {
+        display: none;
+    }
+
+    .table tbody tr {
+        display: block;
+        padding: 12px;
+    }
+
+    .table tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px dashed #eef7df;
+        white-space: normal;
+    }
+
+        .table tbody td:last-child {
+            border-bottom: 0;
+        }
+
+    .table tbody tr {
+        margin-bottom: 14px;
+    }
+}
+
+/* utility: keep header visible when scrolling (optional)
+.table thead tr { position: sticky; top: 0; z-index: 5; }
+*/
+

@@ -3,24 +3,26 @@
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 
-@{
-    // Provide firebase config and vapid via ViewData (or hardcode here - but prefer configuration)
-    var firebaseConfigJson = ViewData["FirebaseConfigJson"] as string ?? "{}"; // set in _Layout or _ViewStart
-    var vapidKey = ViewData["FirebaseVapidKey"] as string ?? "O-_u610c4HmmK9di8EanpFC534sFYJT4yGsTf1gKpxA";
-}
-
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
 
 <script>
     (function () {
-      const firebaseConfig = @Html.Raw(firebaseConfigJson); // JSON object injected from server
-      const VAPID_KEY = "@vapidKey";
+      // ====== HARDCODED FIREBASE CONFIG ======
+      const firebaseConfig = {
+        apiKey: "AIzaSyCBLH7BNFux4wjIf3Tw1WJ6xxk0nDXkb6U",
+        authDomain: "leavemanagementsystem-9cd7d.firebaseapp.com",
+        projectId: "leavemanagementsystem-9cd7d",
+        storageBucket: "leavemanagementsystem-9cd7d.firebasestorage.app",
+        messagingSenderId: "271028255699",
+        appId: "1:271028255699:web:ce476aedaf8e5616e68d26",
+        measurementId: "G-GETT12BC6V"
+      };
+      const VAPID_KEY = "BJ6Qu2-LcZ5yfmv5KSgQCfRI5CbER0V6nx_QXg7YIlWmO4O5dlhKfgb4EN4pBT9jMcxMGzFn0wtUznIckpdU0hY";
 
-      // Only run for authenticated sessions - layout that includes this normally has a session set
-      if (!@((HttpContextAccessor.HttpContext?.Session?.GetString("UserRole") != null).ToString().ToLower())) {
+          if (!@(HttpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated == true ? "true" : "false")) {
         return;
-      }
+    }
 
       firebase.initializeApp(firebaseConfig);
       const messaging = firebase.messaging();
@@ -42,23 +44,57 @@
         return resp.ok;
       }
 
-      async function ensureTokenRegistered() {
-        try {
-          if (Notification.permission !== 'granted') {
-            const perm = await Notification.requestPermission();
-            if (perm !== 'granted') { console.log('Notifications not granted'); return; }
-          }
+      // async function ensureTokenRegistered() {
+      //   try {
+      //     if (Notification.permission !== 'granted') {
+      //       const perm = await Notification.requestPermission();
+      //       if (perm !== 'granted') {
+      //         console.log('Notifications not granted');
+      //         return;
+      //       }
+      //     }
+
+              // Add this after the ensureTokenRegistered() call
+    function triggerOnUserInteraction() {
+        if (Notification.permission === 'default') {
+            console.log('👆 Click anywhere to enable notifications...');
+
+            const requestPermission = () => {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('✅ Permission granted! Registering FCM token...');
+                        ensureTokenRegistered();
+                    }
+                });
+                // Remove event listeners after first click
+                document.removeEventListener('click', requestPermission);
+                document.removeEventListener('keydown', requestPermission);
+            };
+
+            // Trigger on any click or key press
+            document.addEventListener('click', requestPermission);
+            document.addEventListener('keydown', requestPermission);
+        }
+    }
+
+    triggerOnUserInteraction();
 
           const token = await messaging.getToken({ vapidKey: VAPID_KEY });
-          if (!token) return;
+          if (!token) {
+            console.warn('No FCM token returned');
+            return;
+          }
 
           const stored = localStorage.getItem('fcm_token_registered_v1');
-          if (stored === token) { console.log('FCM token already registered'); return; }
+          if (stored === token) {
+            console.log('FCM token already registered');
+            return;
+          }
 
           const ok = await postToServer('/api/token/register', token);
           if (ok) {
             localStorage.setItem('fcm_token_registered_v1', token);
-            console.log('FCM token registered');
+            console.log('✅ FCM token registered successfully!');
           } else {
             console.warn('Failed to register token with server');
           }
@@ -68,25 +104,28 @@
       }
 
       messaging.onMessage && messaging.onMessage(function(payload) {
-        console.log('Foreground FCM', payload);
+        console.log('📬 Foreground FCM message received:', payload);
         // optional: add UI toast here
       });
 
-      // Handle token refresh if supported
+      // Handle token refresh
       messaging.onTokenRefresh && messaging.onTokenRefresh(async () => {
         try {
           const newToken = await messaging.getToken({ vapidKey: VAPID_KEY });
           if (newToken) {
             await postToServer('/api/token/register', newToken);
             localStorage.setItem('fcm_token_registered_v1', newToken);
+            console.log('🔄 FCM token refreshed');
           }
-        } catch (e) { console.error('token refresh', e); }
+        } catch (e) {
+          console.error('Token refresh error', e);
+        }
       });
 
-      // run
+      // Run token registration
       ensureTokenRegistered();
 
-      // Hook logout (find the logout form in the layout)
+      // Hook logout to remove token
       const logoutForm = document.querySelector('form[action*="/EmployeeAuth/Logout"], form[action*="/SupAuth/Logout"], form[action*="/HodAuth/Logout"]');
       if (logoutForm) {
         logoutForm.addEventListener('submit', async function (ev) {
@@ -95,13 +134,47 @@
             const token = localStorage.getItem('fcm_token_registered_v1');
             if (token) {
               await postToServer('/api/token/unregister', token);
-              try { await messaging.deleteToken(token); } catch (ignore) {}
+              try {
+                await messaging.deleteToken(token);
+              } catch (ignore) {}
               localStorage.removeItem('fcm_token_registered_v1');
+              console.log('🗑️ FCM token removed on logout');
             }
-          } catch (ex) { console.warn('unregister error', ex); }
+          } catch (ex) {
+            console.warn('Unregister error', ex);
+          }
           logoutForm.submit();
         }, { once: true });
       }
 
+          messaging.onMessage && messaging.onMessage(function(payload) {
+        console.log('📬 Foreground FCM message received:', payload);
+
+        // Show toast notification
+        if (payload.notification) {
+            showToast(payload.notification.title, payload.notification.body);
+        }
+    });
+
+        function showToast(title, body) {
+        const toast = document.createElement('div');
+        toast.className = 'fcm-toast alert alert-info'; // Uses the CSS class
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            <strong>${title}</strong>
+            <div>${body}</div>
+            <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>
+        `;
+        document.body.appendChild(toast);
+
+        // Auto remove after 5 seconds with fade-out animation
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300); // Remove after animation completes
+        }, 5000);
+    }
+
+
     })();
 </script>
+

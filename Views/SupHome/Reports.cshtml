@@ -34,31 +34,73 @@
                         <th>Reason</th>
                     </tr>
                 </thead>
-                <tbody>
+              @*   <tbody>
                     @foreach (var r in Model)
                     {
-                        var start = r.StartDate.ToDateTime().Date;
-                        var end = r.EndDate.ToDateTime().Date;
+                        var start = r.StartDate?.ToDateTime().Date;
+                        var end = r.EndDate?.ToDateTime().Date;
                         var days = (int)(end - start).TotalDays + 1;
                         <tr>
                             <td>@r.EmployeeId</td>
                             <td>@r.EmployeeName</td>
                             <td>@r.LeaveType</td>
-                            <td>@start.ToString("yyyy-MM-dd")</td>
-                            <td>@end.ToString("yyyy-MM-dd")</td>
-                            <td>@r.SubmittedAt.ToDateTime().ToString("yyyy-MM-dd")</td>
+                            <td>@start?.ToString("yyyy-MM-dd")</td>
+                            <td>@end?.ToString("yyyy-MM-dd")</td>
+                            <td>@r.SubmittedAt?.ToDateTime().ToString("yyyy-MM-dd")</td>
                             <td>@r.Status</td>
                             <td>@days</td>
                             <td>@(string.IsNullOrEmpty(r.ReasonForStatus) ? "-" : r.ReasonForStatus)</td>
                         </tr>
                     }
+                </tbody> *@
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        DateTime? start = r.StartDate?.ToDateTime().Date;
+                        DateTime? end = r.EndDate?.ToDateTime().Date;
+
+                        // Safe calculation of days (handles nulls / half-day / end < start)
+                        double days = 0.0;
+                        if (r.IsHalfDay)
+                        {
+                            days = 0.5;
+                        }
+                        else if (start.HasValue && end.HasValue)
+                        {
+                            if (end.Value >= start.Value)
+                            {
+                                days = (end.Value - start.Value).TotalDays + 1; // inclusive
+                            }
+                            else
+                            {
+                                days = 0.0; // or you can choose to show N/A or mark as invalid
+                            }
+                        }
+
+                        // Display-friendly formatting: integer as "3", fractional as "0.5"
+                        string daysDisplay = (Math.Abs(days % 1) < 0.0001) ? ((int)days).ToString() : days.ToString("0.##");
+
+                        <tr>
+                            <td>@r.EmployeeId</td>
+                            <td>@r.EmployeeName</td>
+                            <td>@r.LeaveType</td>
+                            <td>@(start?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                            <td>@(end?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                            <td>@(r.SubmittedAt?.ToDateTime().ToString("yyyy-MM-dd") ?? "N/A")</td>
+                            <td>@r.Status</td>
+                            <td>@daysDisplay</td>
+                            <td>@(string.IsNullOrEmpty(r.ReasonForStatus) ? "-" : r.ReasonForStatus)</td>
+                        </tr>
+                    }
                 </tbody>
+
             </table>
         </div>
     </div>
 </div>
 
 <style>
+
     .hod-content-card {
         padding: 20px;
     }
@@ -122,7 +164,30 @@
             top: 0;
             z-index: 2;
         }
+
+    <!-- Added inline style to make the full-screen background light green -->
+    
+    html, body {
+        height: 100%;
+    }
+
+    /* light green page background */
+    body {
+        background-color: #e8f5e9; /* soft light green */
+        min-height: 100vh;
+    }
+
+    /* keep cards visually separate on the green background */
+    .card {
+        background-color: #ffffff;
+    }
+
+    /* optional: give a little spacing from the edges */
+    .page-container {
+        padding: 1.5rem;
+    }
 </style>
+
 
 <script>
     /* CSV export and print */

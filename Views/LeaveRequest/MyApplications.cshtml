@@ -4,7 +4,13 @@
 @{
     ViewData["Title"] = "My Leave Applications";
     
+    
+    Layout = "_EmployeeLayout";
+
 }
+
+<link rel="stylesheet" href="~/css/leave-history.css" asp-append-version="true" />
+
 
 <h2>My Leave Applications</h2>
 
@@ -39,8 +45,8 @@
             </tr> *@
             <tr>
                 <td>@leave.LeaveType</td>
-                <td>@(leave.StartDate != null ? leave.StartDate.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
-                <td>@(leave.EndDate != null ? leave.EndDate.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
+                <td>@(leave.StartDate != null ? leave.StartDate?.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
+                <td>@(leave.EndDate != null ? leave.EndDate?.ToDateTime().ToString("yyyy-MM-dd") : "")</td>
                 <td>@(string.IsNullOrWhiteSpace(leave.Reason) ? "-" : leave.Reason)</td>
                 <td>
                     @if (leave.Status == "Approved")
